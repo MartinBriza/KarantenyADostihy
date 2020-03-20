@@ -45,7 +45,7 @@ new Field(this, "Lady Anne", 2000, {
 }, QColor("brown")),
 
 new Field(this, "Náhoda", 0, {
-    new Effect { this, Effect::PLAYER, Effect::DRAW_FINANCE }
+    new Effect { this, Effect::PLAYER, Effect::DRAW_CHANCE }
 }),
 
 new Field(this, "Pasek", 2000, {
@@ -152,7 +152,7 @@ new Field(this, "Grifel", 4400, {
 }, QColor("red")),
 
 new Field(this, "Náhoda", 0, {
-    new Effect { this, Effect::PLAYER, Effect::DRAW_FINANCE }
+    new Effect { this, Effect::PLAYER, Effect::DRAW_CHANCE }
 }),
 
 new Field(this, "Mohyla", 4400, {
@@ -253,7 +253,7 @@ new Field(this, "4. trenér", 4000, {
 }),
 
 new Field(this, "Náhoda", 0, {
-    new Effect { this, Effect::PLAYER, Effect::DRAW_FINANCE }
+    new Effect { this, Effect::PLAYER, Effect::DRAW_CHANCE }
 }),
 
 new Field(this, "Narcius", 7000, {
