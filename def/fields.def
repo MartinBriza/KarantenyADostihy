@@ -1,0 +1,279 @@
+new Field(this, "START", 0, {
+    new Effect { this, Effect::PLAYER, Effect::GAIN, 4000 }
+}),
+
+new Field(this, "Fantome", 1200, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 40 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 200 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 600 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1800 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3200 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 5000 },
+}, QColor("orange")),
+
+new Field(this, "Finance", 0, {
+    new Effect { this, Effect::PLAYER, Effect::DRAW_FINANCE }
+}),
+
+new Field(this, "Gavora", 1200, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 40 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 200 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 600 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1800 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3200 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 5000 },
+}, QColor("orange")),
+
+new Field(this, "Veterinární vyšetření", 0, {
+    new Effect { this, Effect::PLAYER, Effect::FEE, 500 }
+}),
+
+new Field(this, "1. trenér", 4000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
+}),
+
+new Field(this, "Lady Anne", 2000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 120 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 600 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1800 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 5400 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 8000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 11000 },
+}, QColor("brown")),
+
+new Field(this, "Náhoda", 0, {
+    new Effect { this, Effect::PLAYER, Effect::DRAW_FINANCE }
+}),
+
+new Field(this, "Pasek", 2000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 120 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 600 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1200 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 5400 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 8000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 11000 },
+}, QColor("brown")),
+
+new Field(this, "Koran", 2400, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 160 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 800 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 6000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 9000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 12000 },
+}, QColor("brown")),
+
+new Field(this, "Distanc", 0, {
+    new Effect { this, Effect::PLAYER, Effect::WAIT, -1 }
+}),
+
+new Field(this, "Neklan", 2800, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 200 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 9000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 12500 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 15000 },
+}, QColor("lightblue")),
+
+new Field(this, "Přeprava", 3000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 80 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 200 },
+}),
+
+new Field(this, "Portlancl", 2800, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 200 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 9000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 12500 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 15000 },
+}, QColor("lightblue")),
+
+new Field(this, "Japan", 2800, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 240 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1200 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3600 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 10000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 14000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 18000 },
+}, QColor("lightblue")),
+
+new Field(this, "2. trenér", 4000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
+}),
+
+new Field(this, "Kostrava", 3600, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 280 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1400 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 11000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 15000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 19000 },
+}, QColor("greenyellow")),
+
+new Field(this, "Finance", 0, {
+    new Effect { this, Effect::PLAYER, Effect::DRAW_FINANCE }
+}),
+
+new Field(this, "Lukava", 3600, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 280 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1400 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 11000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 15000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 19000 },
+}, QColor("greenyellow")),
+
+new Field(this, "Melák", 4000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 320 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1600 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4400 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 12000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 16000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 20000 },
+}, QColor("greenyellow")),
+
+new Field(this, "Parkoviště"),
+
+new Field(this, "Grifel", 4400, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 360 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1800 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 5000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 14000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 17000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 21000 },
+}, QColor("red")),
+
+new Field(this, "Náhoda", 0, {
+    new Effect { this, Effect::PLAYER, Effect::DRAW_FINANCE }
+}),
+
+new Field(this, "Mohyla", 4400, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 360 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1800 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 5000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 14000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 17000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 21000 },
+}, QColor("red")),
+
+new Field(this, "Metál", 4800, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 400 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 6000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 15000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 18000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 22000 },
+}, QColor("red")),
+
+new Field(this, "3. trenér", 4000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
+}),
+
+new Field(this, "Tara", 5200, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 440 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2200 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 6600 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 16000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 19500 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 23000 },
+}, QColor("yellow")),
+
+new Field(this, "Furioso", 5200, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 440 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2200 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 6600 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 16000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 19500 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 23000 },
+}, QColor("yellow")),
+
+new Field(this, "Stáje", 3000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 80 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 200 },
+}),
+
+new Field(this, "Genius", 5600, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 580 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2400 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 7200 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 17000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 20500 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 24000 },
+}, QColor("yellow")),
+
+new Field(this, "Podezření z dopingu"),
+
+new Field(this, "Shagga", 6000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 500 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2600 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 7800 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 18000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 22000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 25500 },
+}, QColor("green")),
+
+new Field(this, "Dahoman", 6000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 500 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2600 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 7800 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 18000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 22000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 25500 },
+}, QColor("green")),
+
+new Field(this, "Finance", 0, {
+    new Effect { this, Effect::PLAYER, Effect::DRAW_FINANCE }
+}),
+
+new Field(this, "Gira", 6400, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 560 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 9000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 20000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 24000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 28000 },
+}, QColor("green")),
+
+new Field(this, "4. trenér", 4000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
+}),
+
+new Field(this, "Náhoda", 0, {
+    new Effect { this, Effect::PLAYER, Effect::DRAW_FINANCE }
+}),
+
+new Field(this, "Narcius", 7000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 700 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3500 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 10000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 22000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 26000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 30000 },
+}, QColor("slateblue")),
+
+new Field(this, "Veterinární vyšetření", 0,  {
+    new Effect { this, Effect::PLAYER, Effect::FEE, 500 }
+}),
+
+new Field(this, "Napoli", 8000, {
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 12000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 28000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 34000 },
+    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 40000 },
+}, QColor("slateblue"))
