@@ -15,6 +15,8 @@ struct Game {
     QList<ClientConnection*> clients;
     int capacity;
     QString password;
+    ~Game() {
+    }
 };
 
 inline Roster roster {{
@@ -24,6 +26,17 @@ inline QMap<int, Game> games {
 };
 
 inline int lastID { 2 };
+
+inline QList<QColor> colors {
+    Qt::red,
+    Qt::blue,
+    Qt::green,
+    Qt::yellow,
+    Qt::cyan,
+    Qt::magenta,
+    Qt::white,
+    Qt::black,
+};
 
 class ClientConnection : public QObject {
     Q_OBJECT
@@ -46,9 +59,15 @@ public:
         m_state = AHOJ_SENT;
         qCritical() << "Sent ahoj, error:" << m_dataStream.status() << m_socket->errorString();
     }
+    ~ClientConnection() {
+
+    }
 private slots:
     void onSocketStateChanged() {
-
+        qCritical() << "SOCKET STATE: " << m_socket->state();
+        if (m_socket->state() == QAbstractSocket::UnconnectedState) {
+            deleteLater();
+        }
     }
     void onReadyRead() {
         Packet p;
@@ -68,6 +87,10 @@ private slots:
         }
         else {
             switch (p.type) {
+            case Packet::ROSTER: {
+                m_dataStream << Packet(roster);
+                break;
+            }
             case Packet::CREATE: {
                 roster.matches.append(Match { ++lastID, false, p.create.name, m_clientName, 1, 8 });
                 auto gameIt = games.insert(lastID, Game { lastID, p.create.name, { this }, p.create.capacity, p.create.password });
@@ -90,7 +113,30 @@ private slots:
                 break;
             }
             case Packet::JOIN: {
-                if (games.contains(p.join.id)) {
+                if (p.join.id < 0) {
+                    for (auto &game : games) {
+                        if (game.clients.contains(this)) {
+                            game.clients.removeOne(this);
+                            for (auto client : game.clients) {
+                                QList<Opponent> opponents;
+                                bool first;
+                                for (auto i : game.clients) {
+                                    Opponent o;
+                                    o.name = i->m_clientName;
+                                    o.color = i->m_clientColor;
+                                    o.ready = i->m_clientReady;
+                                    o.you = i == client;
+                                    o.money = i->m_money;
+                                    o.leader = first;
+                                    first = false;
+                                    opponents.append(o);
+                                }
+                                client->m_dataStream << Packet(opponents);
+                            }
+                        }
+                        m_dataStream << Packet(Entered{ -1, {} });
+                    }
+                } if (games.contains(p.join.id)) {
                     auto &game = games[p.join.id];
                     if (game.clients.count() >= game.capacity)
                         m_dataStream << Packet(Packet::ERROR, "This game is full");
@@ -100,6 +146,7 @@ private slots:
                         game.clients.append(this);
                         m_dataStream << Packet(Entered{ game.id, game.name });
                         // totally clean
+                        int position = 0;
                         for (auto client : game.clients) {
                             QList<Opponent> opponents;
                             bool first;
@@ -115,6 +162,8 @@ private slots:
                                 opponents.append(o);
                             }
                             client->m_dataStream << Packet(opponents);
+                            client->m_clientColor = colors[position];
+                            position++;
                         }
                     }
                 }

@@ -53,6 +53,13 @@ Item {
                 text: "Nová místnost"
                 onClicked: client.create()
             }
+            Item {
+                Layout.fillWidth: true
+            }
+            Button {
+                text: "Obnovit"
+                onClicked: client.refreshRoster()
+            }
         }
 
         ListView {

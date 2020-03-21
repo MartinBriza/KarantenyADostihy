@@ -185,6 +185,10 @@ void Client::join(int id, const QString &password) {
     m_dataStream << Packet(Join{id, password});
 }
 
+void Client::leave() {
+    m_dataStream << Packet(Join{ -1, {}});
+}
+
 void Client::create(const QString &name) {
     if (name.isEmpty())
         m_dataStream << Packet(Create{m_name + "'s game"});
@@ -194,6 +198,10 @@ void Client::create(const QString &name) {
 
 void Client::sendMessage(const QString &message) {
     m_dataStream << Packet(Chat { QDateTime().time().toString(), m_name, message, 0 });
+}
+
+void Client::refreshRoster() {
+    m_dataStream << Packet(Roster {});
 }
 
 UIRoster::UIRoster(Client *parent)

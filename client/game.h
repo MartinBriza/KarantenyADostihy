@@ -375,8 +375,10 @@ public:
 
 public slots:
     void join(int id, const QString &password);
+    void leave();
     void create(const QString &name = {});
-    Q_INVOKABLE void sendMessage(const QString &message);
+    void sendMessage(const QString &message);
+    void refreshRoster();
 
 private slots:
     void onReadyRead() {
@@ -400,13 +402,23 @@ private slots:
                 else
                     qCritical() << "SUMTIN WRONG: " << m_dataStream.status() << m_socket->errorString();
                 break;
-            case Packet::ENTERED:
-                qCritical() << "Entering a room";
-                m_lobby = new UILobby(this, p.entered.id, p.entered.name);
-                emit lobbyChanged();
-                m_state = LOBBY;
-                emit stateChanged();
+            case Packet::ENTERED: {
+                if (p.entered.id >= 0) {
+                    qCritical() << "Entering a room";
+                    m_lobby = new UILobby(this, p.entered.id, p.entered.name);
+                    emit lobbyChanged();
+                    m_state = LOBBY;
+                    emit stateChanged();
+                }
+                else {
+                    m_lobby->deleteLater();
+                    m_lobby = nullptr;
+                    emit lobbyChanged();
+                    m_state = ROSTER;
+                    emit stateChanged();
+                }
                 break;
+            }
             case Packet::OPPONENTS:
                 qCritical() << "OPPONENTS!";
                 m_opponents.clear();

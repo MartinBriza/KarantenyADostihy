@@ -21,6 +21,7 @@ Item {
             Layout.fillWidth: true
             Button {
                 text: "Odejít"
+                onClicked: client.leave()
             }
             Item {
                 Layout.fillWidth: true
@@ -48,10 +49,14 @@ Item {
                         y: 9
                         RowLayout {
                             Rectangle {
-                                height: 8
+                                height: 10
                                 width: height
                                 radius: height / 2
                                 color: modelData.color
+                                border {
+                                    color: "black"
+                                    width: 1
+                                }
                             }
 
                             Text {
