@@ -10,7 +10,7 @@
 #include <QTcpSocket>
 
 class Effect;
-class Card;
+class UICard;
 class Field;
 class Player;
 class Board;
@@ -61,10 +61,10 @@ private:
 };
 
 
-class Card : public Effect {
+class UICard : public Effect {
     Q_OBJECT
 public:
-    Card(QObject *parent = nullptr, const QString &text = {}, Target target = NO_TARGET, Action action = NO_ACTION, int amount = 0, int secondaryAmount = 0);
+    UICard(QObject *parent = nullptr, const QString &text = {}, Target target = NO_TARGET, Action action = NO_ACTION, int amount = 0, int secondaryAmount = 0);
 private:
     QString m_text;
 };
@@ -160,11 +160,11 @@ private:
     Board *m_board { new Board(this) };
     QList<Player*> m_players;
 
-    QList<Card*> m_financeCards {
+    QList<UICard*> m_financeCards {
         #include "../def/finance.def"
     };
 
-    QList<Card*> m_chanceCards {
+    QList<UICard*> m_chanceCards {
         #include "../def/chance.def"
     };
 };
@@ -284,18 +284,49 @@ public:
 class UIOpponent : public QObject, public Opponent {
     Q_OBJECT
     Q_PROPERTY(int id READ idGet CONSTANT)
-    Q_PROPERTY(QString name READ nameGet CONSTANT)
-    Q_PROPERTY(QColor color READ colorGet CONSTANT)
-    Q_PROPERTY(int money READ moneyGet CONSTANT)
-    Q_PROPERTY(bool leader READ leaderGet CONSTANT)
-    Q_PROPERTY(bool ready READ readyGet CONSTANT)
-    Q_PROPERTY(bool you READ youGet CONSTANT)
+    Q_PROPERTY(QString name READ nameGet NOTIFY nameChanged)
+    Q_PROPERTY(QColor color READ colorGet NOTIFY colorChanged)
+    Q_PROPERTY(int money READ moneyGet NOTIFY moneyChanged)
+    Q_PROPERTY(int position READ positionGet NOTIFY positionChanged)
+    Q_PROPERTY(bool leader READ leaderGet NOTIFY leaderChanged)
+    Q_PROPERTY(bool ready READ readyGet NOTIFY readyChanged)
+    Q_PROPERTY(bool you READ youGet NOTIFY youChanged)
 public:
     UIOpponent(QObject *parent, const Opponent &data)
         : QObject(parent)
         , Opponent(data)
     {
 
+    }
+    void update(const Opponent &data) {
+        if (name != data.name) {
+            name = data.name;
+            emit nameChanged();
+        }
+        if (color != data.color) {
+            color = data.color;
+            emit colorChanged();
+        }
+        if (money != data.money) {
+            money = data.money;
+            emit moneyChanged();
+        }
+        if (position != data.position) {
+            position = data.position;
+            emit positionChanged();
+        }
+        if (leader != data.leader) {
+            leader = data.leader;
+            emit leaderChanged();
+        }
+        if (ready != data.ready) {
+            ready = data.ready;
+            emit readyChanged();
+        }
+        if (you != data.you) {
+            you = data.you;
+            emit youChanged();
+        }
     }
     int idGet() const {
         return id;
@@ -309,6 +340,9 @@ public:
     int moneyGet() const {
         return money;
     }
+    int positionGet() const {
+        return position;
+    }
     bool leaderGet() const {
         return leader;
     }
@@ -318,6 +352,14 @@ public:
     bool youGet() const {
         return you;
     }
+signals:
+    void nameChanged();
+    void colorChanged();
+    void moneyChanged();
+    void positionChanged();
+    void leaderChanged();
+    void readyChanged();
+    void youChanged();
 };
 
 class Client : public QObject {
@@ -329,6 +371,7 @@ class Client : public QObject {
     Q_PROPERTY(QQmlListProperty<UIChat> chat READ chatGet NOTIFY chatChanged)
     Q_PROPERTY(QQmlListProperty<UIOpponent> opponents READ opponentsGet NOTIFY opponentsChanged)
     Q_PROPERTY(int thisPlayerId READ thisPlayerId NOTIFY thisPlayerIdChanged)
+    Q_PROPERTY(Board *board READ boardGet CONSTANT)
 public:
     enum State {
         ROSTER,
@@ -354,6 +397,10 @@ public:
             m_socket->connectToHost("127.0.0.1", 16543);
             m_refreshTimer.start();
         });
+    }
+
+    Board *boardGet() {
+        return m_board;
     }
 
     UIRoster *roster() {
@@ -394,6 +441,7 @@ public slots:
     void sendMessage(const QString &message);
     void refreshRoster();
     void setReady(bool val);
+    void startGame();
 
 private slots:
     void onReadyRead() {
@@ -434,23 +482,46 @@ private slots:
                 }
                 break;
             }
-            case Packet::OPPONENTS:
+            case Packet::OPPONENTS: {
                 qCritical() << "OPPONENTS!";
-                m_opponents.clear();
-                for (auto &i : p.opponents) {
-                    m_opponents.append(new UIOpponent(this, i));
-                    if (i.you && m_thisPlayerId != i.id) {
-                        m_thisPlayerId = i.id;
-                        emit thisPlayerIdChanged();
+                QSet<int> oldIDs;
+                QSet<int> newIDs;
+                for (auto i : m_opponents)
+                    oldIDs.insert(i->id);
+                for (auto i : p.opponents)
+                    newIDs.insert(i.id);
+                if (newIDs != oldIDs) {
+                    m_opponents.clear();
+                    for (auto &i : p.opponents) {
+                        m_opponents.append(new UIOpponent(this, i));
+                        if (i.you && m_thisPlayerId != i.id) {
+                            m_thisPlayerId = i.id;
+                            emit thisPlayerIdChanged();
+                        }
+                    }
+                    emit opponentsChanged();
+                }
+                else {
+                    for (auto old : m_opponents) {
+                        for (auto refresh : p.opponents) {
+                            if (old->id == refresh.id) {
+                                old->update(refresh);
+                            }
+                        }
                     }
                 }
-                emit opponentsChanged();
                 break;
+            }
             case Packet::CHAT:
                 qCritical()  << "SPAM";
                 m_chat.append(new UIChat(this, p.chat));
                 emit chatChanged();
                 break;
+            case Packet::GAMESTATE: {
+                m_state = GAME;
+                emit stateChanged();
+                break;
+            }
             }
         }
     }
@@ -475,6 +546,7 @@ private:
     QList<UIOpponent*> m_opponents {};
     QTimer m_refreshTimer;
     int m_thisPlayerId { -1 };
+    Board *m_board { new Board(this) };
 };
 
 #endif // GAME_H

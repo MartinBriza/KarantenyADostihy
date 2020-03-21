@@ -53,7 +53,7 @@ int Effect::secondaryAmount() const {
     return m_secondaryAmount;
 }
 
-Card::Card(QObject *parent, const QString &text, Effect::Target target, Effect::Action action, int amount, int secondaryAmount)
+UICard::UICard(QObject *parent, const QString &text, Effect::Target target, Effect::Action action, int amount, int secondaryAmount)
     : Effect(parent, target, action, amount, secondaryAmount)
     , m_text(text)
 {
@@ -210,6 +210,10 @@ void Client::setReady(bool val) {
         qCritical() << "Trying to set ready to" << val;
         m_dataStream << Packet(QList<Opponent>{{m_thisPlayerId, {}, {}, -1, {}, val, {}}});
     }
+}
+
+void Client::startGame() {
+    m_dataStream << Packet(GameState{});
 }
 
 UIRoster::UIRoster(Client *parent)

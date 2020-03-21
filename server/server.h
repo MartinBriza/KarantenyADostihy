@@ -13,6 +13,9 @@ struct Game : public Match {
     Game(const Match& match)
         : Match(match) {}
     QList<ClientConnection*> clients;
+    GameState state {{
+        { {"AHOJ"}, 0 }
+    }};
 };
 
 inline QSet<Game*> games {};
@@ -151,6 +154,16 @@ private slots:
                 qCritical() << "Jako snaha byla";
                 if (changed)
                     updateOpponents(game);
+                break;
+            }
+            case Packet::GAMESTATE: {
+                auto game = clientGame();
+                if (game) {
+                    for (auto client : game->clients) {
+                        client->m_dataStream << Packet(game->state);
+                    }
+                }
+                break;
             }
             }
         }

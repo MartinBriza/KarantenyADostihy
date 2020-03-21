@@ -4,34 +4,34 @@ import QtQuick.Layouts 1.12
 Item {
     id: board
 
-    property real fieldWidth: board.width / (game.board.fieldCount / 4 + 1)
-    property real fieldHeight: board.width / (game.board.fieldCount / 4 + 1)
+    property real fieldWidth: board.width / (client.board.fieldCount / 4 + 1)
+    property real fieldHeight: board.width / (client.board.fieldCount / 4 + 1)
 
     function fieldPosition(index) {
-        if (index <= game.board.fieldCount / 4)
+        if (index <= client.board.fieldCount / 4)
             return Qt.point(
                 index * fieldWidth,
                 0
             )
-        else if (index <= 2 * game.board.fieldCount / 4)
+        else if (index <= 2 * client.board.fieldCount / 4)
             return Qt.point(
-                (game.board.fieldCount / 4) * fieldWidth,
-                ((index % (game.board.fieldCount / 4 + 1)) + 1) * fieldHeight
+                (client.board.fieldCount / 4) * fieldWidth,
+                ((index % (client.board.fieldCount / 4 + 1)) + 1) * fieldHeight
             )
-        else if (index <= 3 * game.board.fieldCount / 4)
+        else if (index <= 3 * client.board.fieldCount / 4)
             return Qt.point(
-                ((game.board.fieldCount / 4) - ((index - 1) % (game.board.fieldCount / 4)) - 1) * fieldWidth,
-                (game.board.fieldCount / 4 ) * fieldHeight
+                ((client.board.fieldCount / 4) - ((index - 1) % (client.board.fieldCount / 4)) - 1) * fieldWidth,
+                (client.board.fieldCount / 4 ) * fieldHeight
             )
         else
             return Qt.point(
                 0,
-                (game.board.fieldCount / 4 - ((index - 1) % (game.board.fieldCount / 4)) - 1) * fieldHeight
+                (client.board.fieldCount / 4 - ((index - 1) % (client.board.fieldCount / 4)) - 1) * fieldHeight
             )
     }
 
     Repeater {
-        model: game.board.fields
+        model: client.board.fields
         delegate: Field {
 
         }

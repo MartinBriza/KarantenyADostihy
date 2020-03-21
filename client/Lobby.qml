@@ -33,6 +33,7 @@ Item {
             }
             Button {
                 text: "Začít"
+                onClicked: client.startGame()
             }
         }
 

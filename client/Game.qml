@@ -8,7 +8,7 @@ Item {
         width: Math.min(parent.width, parent.height)
         height: parent.height
         Repeater {
-            model: game.players
+            model: client.opponents
             delegate: Player {
                 model: modelData
 
@@ -26,7 +26,7 @@ Item {
         }
         ListView {
             anchors.fill: parent
-            model: game.players
+            model: client.opponents
             delegate: Rectangle {
                 width: parent.width
                 height: 64

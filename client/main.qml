@@ -19,6 +19,10 @@ Window {
         visible: client.state === ClientData.LOBBY
         anchors.fill: parent
     }
+    Game {
+        visible: client.state === ClientData.GAME
+        anchors.fill: parent
+    }
 
     Component.onCompleted: console.warn(client.state)
 }

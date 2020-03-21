@@ -91,16 +91,17 @@ struct Opponent {
     QString name;
     QColor color;
     int money;
+    int position;
     bool leader;
     bool ready;
     bool you;
 };
 inline QDataStream &operator<<(QDataStream &str, const Opponent &item) {
-    str << item.id << item.name << item.color << item.money << item.leader << item.ready << item.you;
+    str << item.id << item.name << item.color << item.money << item.leader << item.ready << item.you << item.position;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Opponent &item) {
-    str >> item.id >> item.name >> item.color >> item.money >> item.leader >> item.ready >> item.you;
+    str >> item.id >> item.name >> item.color >> item.money >> item.leader >> item.ready >> item.you >> item.position;
     return str;
 }
 
@@ -119,6 +120,33 @@ inline QDataStream &operator>>(QDataStream &str, Chat &item) {
     return str;
 }
 
+struct Card {
+    QString name;
+    bool operator<(const Card &r) const {
+        return name < r.name;
+    }
+};
+inline QDataStream &operator<<(QDataStream &str, const Card &item) {
+    str << item.name;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Card &item) {
+    str >> item.name;
+    return str;
+}
+
+struct GameState {
+    QMap<Card, int> cards;
+};
+inline QDataStream &operator<<(QDataStream &str, const GameState &item) {
+    str << item.cards;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, GameState &item) {
+    str >> item.cards;
+    return str;
+}
+
 struct Packet {
     enum Type {
         NONE = 0,
@@ -130,7 +158,8 @@ struct Packet {
         CREATE,
         ENTERED,
         OPPONENTS,
-        CHAT
+        CHAT,
+        GAMESTATE,
     } type { NONE };
     union {
         QString error;
@@ -142,6 +171,7 @@ struct Packet {
         Entered entered;
         QList<Opponent> opponents;
         Chat chat;
+        GameState gameState;
     };
     Packet() {}
     Packet(Type type, const QString &text) : type(type) {
@@ -159,6 +189,7 @@ struct Packet {
     Packet(const Entered &d) : type(ENTERED), entered(d) { }
     Packet(const Chat &d) : type(CHAT), chat(d) { }
     Packet(const QList<Opponent> &d) : type(OPPONENTS), opponents(d) { }
+    Packet(const GameState &d) : type(GAMESTATE), gameState(d) { }
     void setType(Type type) {
         clear();
         this->type = type;
@@ -192,6 +223,9 @@ struct Packet {
         case CHAT:
             new (&chat) Chat();
             break;
+        case GAMESTATE:
+            new (&gameState) GameState();
+            break;
         }
     }
     void clear() {
@@ -224,6 +258,9 @@ struct Packet {
             break;
         case CHAT:
             chat.~Chat();
+            break;
+        case GAMESTATE:
+            gameState.~GameState();
             break;
         }
         type = NONE;
@@ -265,6 +302,9 @@ inline QDataStream &operator<<(QDataStream &str, const Packet &item) {
         break;
     case Packet::CHAT:
         str << item.chat;
+        break;
+    case Packet::GAMESTATE:
+        str << item.gameState;
         break;
     default:
         str.setStatus(QDataStream::WriteFailed);
@@ -312,6 +352,10 @@ inline QDataStream &operator>>(QDataStream &str, Packet &item) {
     }
     case Packet::CHAT: {
         str >> item.chat;
+        break;
+    }
+    case Packet::GAMESTATE: {
+        str >> item.gameState;
         break;
     }
     default: {
