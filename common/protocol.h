@@ -3,6 +3,7 @@
 
 #include <QDebug>
 #include <QDataStream>
+#include <QColor>
 
 struct Ahoj {
     QString ahoj { };
@@ -42,9 +43,6 @@ inline QDataStream &operator<<(QDataStream &str, const Roster &item) {
 }
 inline QDataStream &operator>>(QDataStream &str, Roster &item) {
     str >> item.matches;
-    qCritical() << "Roster Read data:";
-    for (auto i : item.matches)
-        qCritical() << "\t" << i.id << i.name << i.owner;
     return str;
 }
 
@@ -63,13 +61,15 @@ inline QDataStream &operator>>(QDataStream &str, Join &item) {
 
 struct Create {
     QString name {};
+    QString password {};
+    int capacity { 8 };
 };
 inline QDataStream &operator<<(QDataStream &str, const Create &item) {
-    str << item.name;
+    str << item.name << item.password << item.capacity;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Create &item) {
-    str >> item.name;
+    str >> item.name >> item.password >> item.capacity;
     return str;
 }
 
@@ -83,6 +83,23 @@ inline QDataStream &operator<<(QDataStream &str, const Entered &item) {
 }
 inline QDataStream &operator>>(QDataStream &str, Entered &item) {
     str >> item.id >> item.name;
+    return str;
+}
+
+struct Opponent {
+    QString name;
+    QColor color;
+    int money;
+    bool leader;
+    bool ready;
+    bool you;
+};
+inline QDataStream &operator<<(QDataStream &str, const Opponent &item) {
+    str << item.name << item.color << item.money << item.leader << item.ready << item.you;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Opponent &item) {
+    str >> item.name >> item.color >> item.money >> item.leader >> item.ready >> item.you;
     return str;
 }
 
@@ -103,7 +120,7 @@ inline QDataStream &operator>>(QDataStream &str, Chat &item) {
 
 struct Packet {
     enum Type {
-        NONE,
+        NONE = 0,
         ERROR,
         AHOJ,
         MATCH,
@@ -111,6 +128,7 @@ struct Packet {
         JOIN,
         CREATE,
         ENTERED,
+        OPPONENTS,
         CHAT
     } type { NONE };
     union {
@@ -121,6 +139,7 @@ struct Packet {
         Join join;
         Create create;
         Entered entered;
+        QList<Opponent> opponents;
         Chat chat;
     };
     Packet() {}
@@ -138,6 +157,7 @@ struct Packet {
     Packet(const Create &d) : type(CREATE), create(d) { }
     Packet(const Entered &d) : type(ENTERED), entered(d) { }
     Packet(const Chat &d) : type(CHAT), chat(d) { }
+    Packet(const QList<Opponent> &d) : type(OPPONENTS), opponents(d) { }
     void setType(Type type) {
         clear();
         this->type = type;
@@ -164,6 +184,9 @@ struct Packet {
             break;
         case ENTERED:
             new (&entered) Entered();
+            break;
+        case OPPONENTS:
+            new (&opponents) QList<Opponent>();
             break;
         case CHAT:
             new (&chat) Chat();
@@ -194,6 +217,9 @@ struct Packet {
             break;
         case ENTERED:
             entered.~Entered();
+            break;
+        case OPPONENTS:
+            opponents.~QList<Opponent>();
             break;
         case CHAT:
             chat.~Chat();
@@ -233,6 +259,9 @@ inline QDataStream &operator<<(QDataStream &str, const Packet &item) {
     case Packet::ENTERED:
         str << item.entered;
         break;
+    case Packet::OPPONENTS:
+        str << item.opponents;
+        break;
     case Packet::CHAT:
         str << item.chat;
         break;
@@ -265,7 +294,7 @@ inline QDataStream &operator>>(QDataStream &str, Packet &item) {
         break;
     }
     case Packet::JOIN: {
-        str >> item.create;
+        str >> item.join;
         break;
     }
     case Packet::CREATE: {
@@ -274,6 +303,10 @@ inline QDataStream &operator>>(QDataStream &str, Packet &item) {
     }
     case Packet::ENTERED: {
         str >> item.entered;
+        break;
+    }
+    case Packet::OPPONENTS: {
+        str >> item.opponents;
         break;
     }
     case Packet::CHAT: {

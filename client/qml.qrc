@@ -5,6 +5,7 @@
         <file>Player.qml</file>
         <file>Field.qml</file>
         <file>Game.qml</file>
+        <file>Roster.qml</file>
         <file>Lobby.qml</file>
     </qresource>
 </RCC>

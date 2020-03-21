@@ -8,13 +8,16 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
 
-    qmlRegisterUncreatableType<Game>("monopoly", 1, 0, "Game", "Created by core");
-    qmlRegisterUncreatableType<Board>("monopoly", 1, 0, "Board", "Created by core");
-    qmlRegisterUncreatableType<Player>("monopoly", 1, 0, "Player", "Created by core");
-    qmlRegisterUncreatableType<Field>("monopoly", 1, 0, "Field", "Created by core");
-    qmlRegisterUncreatableType<Client>("monopoly", 1, 0, "Client", "Created by core");
-    qmlRegisterUncreatableType<UIRoster>("monopoly", 1, 0, "Roster", "Created by core");
-    qmlRegisterUncreatableType<UIMatch>("monopoly", 1, 0, "Match", "Created by core");
+    qsrand(time(nullptr));
+
+    qmlRegisterUncreatableType<Game>("monopoly", 1, 0, "GameData", "Created by core");
+    qmlRegisterUncreatableType<Board>("monopoly", 1, 0, "BoardData", "Created by core");
+    qmlRegisterUncreatableType<Player>("monopoly", 1, 0, "PlayerData", "Created by core");
+    qmlRegisterUncreatableType<Field>("monopoly", 1, 0, "FieldData", "Created by core");
+    qmlRegisterUncreatableType<Client>("monopoly", 1, 0, "ClientData", "Created by core");
+    qmlRegisterUncreatableType<UIRoster>("monopoly", 1, 0, "RosterData", "Created by core");
+    qmlRegisterUncreatableType<UIMatch>("monopoly", 1, 0, "MatchData", "Created by core");
+    qmlRegisterUncreatableType<UILobby>("monopoly", 1, 0, "LobbyData", "Created by core");
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("client", new Client());

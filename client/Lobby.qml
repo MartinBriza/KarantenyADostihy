@@ -1,177 +1,126 @@
 import QtQuick 2.12
 import QtQuick.Layouts 1.12
-import QtQuick.Dialogs 1.2
 import QtQuick.Controls 2.12
 
 Item {
-    ListModel {
-        id: rosterModel
-        ListElement { password: false; name: "Mock hra 1"; owner: "Bizon"; players: 3; maximumPlayers: 8 }
-        ListElement { password: true; name: "Mock hra 2"; owner: "Whoever"; players: 1; maximumPlayers: 4 }
-        ListElement { password: false; name: "Yellow fever"; owner: "syyyr"; players: 1; maximumPlayers: 2 }
-    }
-
-    Button {
-        text: "⚙️"
-        width: height
-        anchors {
-            right: parent.right
-            top: parent.top
-            margins: 6
-        }
-    }
-
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
-        width: parent.width / 3 * 2
-        height: parent.height
+        anchors.fill: parent
         spacing: 9
 
         Text {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
-            text: "Karantény a dostihy"
+            text: client.lobby.name
             font.pixelSize: 32
         }
 
-        RowLayout {
-            Layout.alignment: Qt.AlignHCenter
-            Text {
-                text: "Tvoje jméno:"
-            }
-            TextField {
-                text: client.name
-                onAccepted: client.name = text
-            }
-            CheckBox {
-                text: "Máš kostku?"
-            }
+        ListModel {
+            id: mockChatModel
+            ListElement { time: "11:32"; from: "Bizon"; message: "AHOJ"; urgency: 0 }
+            ListElement { time: "11:33"; from: ""; message: "<Guest> si odebral 12342 peněz."; urgency: 3 }
+            ListElement { time: "11:34"; from: ""; message: "<Bizon> je ready."; urgency: 1 }
+        }
+        ListModel {
+            id: mockOpponentModel
+            ListElement { name: "Bizon"; playerColor: "blue"; money: 30000; leader: true; ready: true; you: false }
+            ListElement { name: "Guest"; playerColor: "red"; money: 12342; leader: false; ready: false; you: true }
         }
 
         RowLayout {
-            Button {
-                text: "Nová místnost"
-                onClicked: client.create()
-            }
-        }
-
-        ListView {
-            clip: true
-            Layout.fillHeight: true
             Layout.fillWidth: true
-            header: Item {
-                width: parent.width
-                height: rosterHeaderLayout.height + 1
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    color: "black"
-                    height: 1
-                }
-
-                RowLayout {
-                    id: rosterHeaderLayout
-                    width: parent.width
-                    Text {
-                        Layout.fillWidth: true
-                        text: "Jméno hry"
-                        horizontalAlignment: Text.AlignHCenter
-                        font.bold: true
-                    }
-                    Text {
-                        Layout.preferredWidth: 96
-                        text: "Založil"
-                        horizontalAlignment: Text.AlignHCenter
-                        font.bold: true
-                    }
-                    Text {
-                        Layout.preferredWidth: 64
-                        text: "Hráči"
-                        horizontalAlignment: Text.AlignHCenter
-                        font.bold: true
-                    }
-                }
+            Button {
+                text: "Odejít"
             }
+            Item {
+                Layout.fillWidth: true
+            }
+            Button {
+                checkable: true
+                text: "Ready"
+            }
+            Button {
+                text: "Začít"
+            }
+        }
 
-            model: client.roster.matches
-            delegate: Rectangle {
-                width: parent.width
-                height: rosterItemLayout.height + 7
-
-                color: rosterItemMouse.pressed ? "#ffdddddd" : rosterItemMouse.containsMouse ? "#ffeeeeee" : "#00ffffff"
-                Behavior on color { ColorAnimation { duration: 100 } }
-
-                RowLayout {
-                    y: 3
-                    id: rosterItemLayout
-                    width: parent.width
-                    Text {
-                        Layout.fillWidth: true
-                        text: (password ? "🔒 " : "") + name
-                    }
-                    Text {
-                        Layout.preferredWidth: 96
-                        text: owner
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-                    Text {
-                        Layout.preferredWidth: 64
-                        text: players + "/" + maximumPlayers
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-                }
-
-                MouseArea {
-                    id: rosterItemMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: {
-                        if (password) {
-                            passwordDialog.visible = true
-                        }
-                        else {
-
-                        }
-                    }
-                }
-                Dialog {
-                    id: passwordDialog
-                    function accept() {
-                        visible = false
-                    }
-                    function reject() {
-                        visible = false
-                    }
+        Flow {
+            Layout.fillWidth: true
+            Repeater {
+                model: mockOpponentModel
+                Rectangle {
+                    width: childrenRect.width + 18
+                    height: childrenRect.height + 18
+                    border.color: "gray"
+                    border.width: 1
                     ColumnLayout {
-                        anchors.fill: parent
-                        onVisibleChanged: {
-                            if (visible) {
-                                passwordTextField.text = ""
-                                passwordTextField.forceActiveFocus()
+                        x: 9
+                        y: 9
+                        RowLayout {
+                            Rectangle {
+                                height: 8
+                                width: height
+                                radius: height / 2
+                                color: playerColor
+                            }
+
+                            Text {
+                                text: name
+                                font.bold: ready
+                                color: ready ? "green" : "black"
+                            }
+                            Text {
+                                text: "(you)"
+                                visible: you
+                            }
+
+                            Text {
+                                text: "☠️"
+                                visible: leader
                             }
                         }
                         Text {
-                            text: "Zadej heslo ke hře:"
+                            text: "Money: " + money
                         }
-                        TextField {
-                            id: passwordTextField
-                            focus: true
-                            onAccepted: passwordDialog.accept()
-                        }
-                        RowLayout {
-                            Layout.fillWidth: true
-                            Button {
-                                Layout.fillWidth: true
-                                text: "Zrušit"
-                                onClicked: passwordDialog.reject()
+                    }
+                }
+            }
+        }
+
+        Item {
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 3
+                border.color: "gray"
+                border.width: 1
+                ColumnLayout {
+                    anchors.fill: parent
+                    ListView {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        model: mockChatModel
+                        delegate: RowLayout {
+                            width: parent.width
+                            Text {
+                                text: time
                             }
-                            Button {
+                            Text {
+                                visible: from.length > 0
+                                font.bold: true
+                                text: from
+                            }
+                            Text {
                                 Layout.fillWidth: true
-                                text: "OK"
-                                onClicked: passwordDialog.accept()
+                                text: message
+                                font.bold: urgency > 0
+                                color: urgency > 1 ? "red" : "black"
                             }
                         }
+                    }
+                    TextField {
+                        Layout.fillWidth: true
                     }
                 }
             }

@@ -221,11 +221,54 @@ private:
     QList<UIMatch*> m_matches { };
 };
 
+class UILobby : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(int id READ idGet CONSTANT)
+    Q_PROPERTY(QString name READ nameGet WRITE nameSet NOTIFY nameChanged)
+public:
+    UILobby(QObject *parent, int id = {}, const QString &name = {})
+        : QObject(parent)
+        , m_id(id)
+        , m_name(name)
+    {
+
+    }
+    int idGet() const {
+        return m_id;
+    }
+    QString nameGet() const {
+        return m_name;
+    }
+    void nameSet(const QString &val) {
+        if (m_name != val) {
+            m_name = val;
+            emit nameChanged();
+        }
+    }
+
+signals:
+    void nameChanged();
+
+private:
+    int m_id;
+    QString m_name;
+};
+
 class Client : public QObject {
     Q_OBJECT
     Q_PROPERTY(UIRoster* roster READ roster CONSTANT)
     Q_PROPERTY(QString name READ nameGet WRITE nameSet NOTIFY nameChanged)
+    Q_PROPERTY(State state READ stateGet NOTIFY stateChanged)
+    Q_PROPERTY(UILobby *lobby READ lobbyGet NOTIFY lobbyChanged)
 public:
+    enum State {
+        ROSTER,
+        LOBBY,
+        GAME
+    } m_state { ROSTER };
+    Q_ENUM(State)
+    State stateGet() { return m_state; }
+
     Client(QObject *parent = nullptr)
         : QObject(parent)
         , m_socket(new QTcpSocket(this))
@@ -241,6 +284,9 @@ public:
 
     UIRoster *roster() {
         return m_roster;
+    }
+    UILobby *lobbyGet() {
+        return m_lobby;
     }
 
     QString nameGet() const {
@@ -262,25 +308,39 @@ public slots:
 
 private slots:
     void onReadyRead() {
-        qCritical() << "READY READ";
-        Packet p;
-        m_dataStream >> p;
-        qCritical() << "Packet type " << p.type;
-        switch (p.type) {
-        case Packet::AHOJ:
-            qCritical() << "Got ahoj, sending ahoj";
-            m_dataStream << Packet(Ahoj{m_name});
-            break;
-        case Packet::ERROR:
-            qCritical() << "SERVER ERROR: " << p.error;
-            break;
-        case Packet::ROSTER:
-            qCritical() << "GOT ROSTER";
-            if (m_dataStream.status() == QDataStream::Ok)
-                m_roster->regenerate(p.roster);
-            else
-                qCritical() << "SUMTIN WRONG: " << m_dataStream.status() << m_socket->errorString();
-            break;
+        while(m_socket->bytesAvailable() > 0) {
+            qCritical() << "READY READ";
+            Packet p;
+            m_dataStream >> p;
+            qCritical() << "Packet type " << p.type;
+            switch (p.type) {
+            case Packet::AHOJ:
+                qCritical() << "Got ahoj, sending ahoj";
+                m_dataStream << Packet(Ahoj{m_name});
+                break;
+            case Packet::ERROR:
+                qCritical() << "SERVER ERROR: " << p.error;
+                break;
+            case Packet::ROSTER:
+                qCritical() << "GOT ROSTER";
+                if (m_dataStream.status() == QDataStream::Ok)
+                    m_roster->regenerate(p.roster);
+                else
+                    qCritical() << "SUMTIN WRONG: " << m_dataStream.status() << m_socket->errorString();
+                break;
+            case Packet::ENTERED:
+                qCritical() << "Entering a room";
+                m_lobby = new UILobby(this, p.entered.id, p.entered.name);
+                emit lobbyChanged();
+                m_state = LOBBY;
+                emit stateChanged();
+                break;
+            case Packet::OPPONENTS:
+                qCritical() << "OPPONENTS!";
+                for (auto i : p.opponents)
+                    qCritical() << "\t" << i.name;
+                break;
+            }
         }
     }
     void onError(QAbstractSocket::SocketError err) {
@@ -288,12 +348,15 @@ private slots:
     }
 signals:
     void nameChanged();
+    void stateChanged();
+    void lobbyChanged();
 
 private:
     QTcpSocket *m_socket;
     QDataStream m_dataStream;
     UIRoster *m_roster;
     QString m_name { randomName() };
+    UILobby *m_lobby;
 };
 
 #endif // GAME_H
