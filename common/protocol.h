@@ -48,7 +48,7 @@ inline QDataStream &operator>>(QDataStream &str, Roster &item) {
 
 struct Join {
     int id { -1 };
-    QString password { false };
+    QString password { };
 };
 inline QDataStream &operator<<(QDataStream &str, const Join &item) {
     str << item.id << item.password;

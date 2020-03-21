@@ -4,7 +4,7 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="main.qml" line="10"/>
+        <location filename="main.qml" line="12"/>
         <source>Karanteny</source>
         <translation type="unfinished"></translation>
     </message>
