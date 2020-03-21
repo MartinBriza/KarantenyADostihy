@@ -283,6 +283,7 @@ public:
 
 class UIOpponent : public QObject, public Opponent {
     Q_OBJECT
+    Q_PROPERTY(int id READ idGet CONSTANT)
     Q_PROPERTY(QString name READ nameGet CONSTANT)
     Q_PROPERTY(QColor color READ colorGet CONSTANT)
     Q_PROPERTY(int money READ moneyGet CONSTANT)
@@ -295,6 +296,9 @@ public:
         , Opponent(data)
     {
 
+    }
+    int idGet() const {
+        return id;
     }
     QString nameGet() const {
         return name;
@@ -324,6 +328,7 @@ class Client : public QObject {
     Q_PROPERTY(UILobby *lobby READ lobbyGet NOTIFY lobbyChanged)
     Q_PROPERTY(QQmlListProperty<UIChat> chat READ chatGet NOTIFY chatChanged)
     Q_PROPERTY(QQmlListProperty<UIOpponent> opponents READ opponentsGet NOTIFY opponentsChanged)
+    Q_PROPERTY(int thisPlayerId READ thisPlayerId NOTIFY thisPlayerIdChanged)
 public:
     enum State {
         ROSTER,
@@ -369,6 +374,10 @@ public:
         }
     }
 
+    int thisPlayerId() const {
+        return m_thisPlayerId;
+    }
+
     QQmlListProperty<UIChat> chatGet() {
         return QQmlListProperty<UIChat>(this, m_chat);
     }
@@ -384,6 +393,7 @@ public slots:
     void create(const QString &name = {});
     void sendMessage(const QString &message);
     void refreshRoster();
+    void setReady(bool val);
 
 private slots:
     void onReadyRead() {
@@ -429,6 +439,10 @@ private slots:
                 m_opponents.clear();
                 for (auto &i : p.opponents) {
                     m_opponents.append(new UIOpponent(this, i));
+                    if (i.you && m_thisPlayerId != i.id) {
+                        m_thisPlayerId = i.id;
+                        emit thisPlayerIdChanged();
+                    }
                 }
                 emit opponentsChanged();
                 break;
@@ -449,6 +463,7 @@ signals:
     void lobbyChanged();
     void chatChanged();
     void opponentsChanged();
+    void thisPlayerIdChanged();
 
 private:
     QTcpSocket *m_socket { nullptr };
@@ -459,6 +474,7 @@ private:
     QList<UIChat*> m_chat {};
     QList<UIOpponent*> m_opponents {};
     QTimer m_refreshTimer;
+    int m_thisPlayerId { -1 };
 };
 
 #endif // GAME_H

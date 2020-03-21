@@ -29,6 +29,7 @@ Item {
             Button {
                 checkable: true
                 text: "Ready"
+                onCheckedChanged: client.setReady(checked)
             }
             Button {
                 text: "Začít"
@@ -61,8 +62,8 @@ Item {
 
                             Text {
                                 text: name
-                                font.bold: ready
-                                color: ready ? "green" : "black"
+                                font.bold: modelData.ready
+                                color: modelData.ready ? "green" : "black"
                             }
                             Text {
                                 text: "(you)"

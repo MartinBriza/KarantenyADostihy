@@ -87,6 +87,7 @@ inline QDataStream &operator>>(QDataStream &str, Entered &item) {
 }
 
 struct Opponent {
+    int id;
     QString name;
     QColor color;
     int money;
@@ -95,11 +96,11 @@ struct Opponent {
     bool you;
 };
 inline QDataStream &operator<<(QDataStream &str, const Opponent &item) {
-    str << item.name << item.color << item.money << item.leader << item.ready << item.you;
+    str << item.id << item.name << item.color << item.money << item.leader << item.ready << item.you;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Opponent &item) {
-    str >> item.name >> item.color >> item.money >> item.leader >> item.ready >> item.you;
+    str >> item.id >> item.name >> item.color >> item.money >> item.leader >> item.ready >> item.you;
     return str;
 }
 

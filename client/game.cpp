@@ -204,6 +204,14 @@ void Client::refreshRoster() {
     m_dataStream << Packet(Roster {});
 }
 
+void Client::setReady(bool val) {
+    qCritical() << "This player ID is" << m_thisPlayerId;
+    if (m_thisPlayerId > 0) {
+        qCritical() << "Trying to set ready to" << val;
+        m_dataStream << Packet(QList<Opponent>{{m_thisPlayerId, {}, {}, -1, {}, val, {}}});
+    }
+}
+
 UIRoster::UIRoster(Client *parent)
     : QObject(parent)
 {

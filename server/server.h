@@ -17,7 +17,8 @@ struct Game : public Match {
 
 inline QSet<Game*> games {};
 
-inline int lastID { 1 };
+inline int lastGameID { 1 };
+inline int lastPlayerID { 1 };
 
 inline QList<QColor> colors {
     Qt::red,
@@ -93,7 +94,7 @@ private slots:
                 break;
             }
             case Packet::CREATE: {
-                auto gameIt = games.insert(new Game(Match{lastID++, p.create.password, p.create.name, m_clientName, 0, p.create.capacity}));
+                auto gameIt = games.insert(new Game(Match{lastGameID++, p.create.password, p.create.name, m_clientName, 0, p.create.capacity}));
                 auto game = *gameIt;
                 joinGame(game->id, p.create.password);
             }
@@ -117,6 +118,40 @@ private slots:
                 }
                 break;
             }
+            case Packet::OPPONENTS: {
+                auto game = clientGame();
+                if (!game) {
+                    qCritical() << "NOUGEJM";
+                    return;
+                }
+                bool changed = false;
+                for (auto i : p.opponents) {
+                    for (auto c : game->clients) {
+                        if (c->m_clientId == i.id) {
+                            if (!i.name.isEmpty()) {
+                                c->m_clientName = i.name;
+                                changed = true;
+                            }
+                            if (i.color.isValid()) {
+                                c->m_clientColor = i.color;
+                                changed = true;
+                            }
+                            if (i.money >= 0) {
+                                c->m_money = i.money;
+                                changed = true;
+                            }
+                            if (c->m_clientReady != i.ready) {
+                                qCritical() << "Changing ready to" << i.ready;
+                                c->m_clientReady = i.ready;
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+                qCritical() << "Jako snaha byla";
+                if (changed)
+                    updateOpponents(game);
+            }
             }
         }
     }
@@ -125,6 +160,13 @@ private slots:
         deleteLater();
     }
 private:
+    Game *clientGame() {
+        for (auto i : games) {
+            if (i->clients.contains(this))
+                return i;
+        }
+        return nullptr;
+    }
     void joinGame(int id, const QString &password) {
         for (auto game : games) {
             if (game->id == id) {
@@ -141,7 +183,6 @@ private:
                 leaveGame(false);
                 game->clients.append(this);
                 game->players++;
-                m_clientRoom = id;
                 m_dataStream << Packet(Entered{ game->id, game->name });
                 updateOpponents(game);
             }
@@ -149,7 +190,6 @@ private:
     }
     void leaveGame(bool notify = true) {
         m_dataStream << Packet(Entered{ -1, {} });
-        m_clientRoom = 0;
         for (auto game : games) {
             if (game->clients.contains(this)) {
                 game->clients.removeOne(this);
@@ -172,9 +212,10 @@ private:
         int position = 0;
         for (auto client : game->clients) {
             QList<Opponent> opponents;
-            bool first;
+            bool first = true;
             for (auto i : game->clients) {
                 Opponent o;
+                o.id = i->m_clientId;
                 o.name = i->m_clientName;
                 o.color = i->m_clientColor;
                 o.ready = i->m_clientReady;
@@ -194,8 +235,8 @@ private:
     QDataStream m_dataStream;
     State m_state { PRE_AHOJ };
     QString m_clientName {};
-    int m_clientRoom { 0 };
     bool m_clientReady { false };
+    int m_clientId { lastPlayerID++ };
     int m_money { 30000 };
     QColor m_clientColor { Qt::red };
 };
