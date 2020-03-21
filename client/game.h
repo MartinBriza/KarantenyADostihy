@@ -1,9 +1,13 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "protocol.h"
+
 #include <QObject>
 #include <QtQml>
 #include <QColor>
+
+#include <QTcpSocket>
 
 class Effect;
 class Card;
@@ -71,7 +75,7 @@ class Field : public QObject {
     Q_PROPERTY(int price READ price CONSTANT)
     Q_PROPERTY(int fee READ fee NOTIFY feeChanged)
 public:
-    Field(QObject *parent = nullptr, const QString &name = {}, int price = 0, QList<Effect*> effect = {}, QColor color = Qt::transparent, int upgrade = -1);
+    Field(QObject *parent = nullptr, const QString &name = {}, int price = 0, QList<Effect*> effect = {}, QColor color = Qt::white, int upgrade = -1);
 
     QString name() const;
     int price() const;
@@ -161,6 +165,101 @@ private:
     QList<Card*> m_chanceCards {
         #include "../def/chance.def"
     };
+};
+
+class UIMatch : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
+    Q_PROPERTY(QString owner READ owner NOTIFY ownerChanged)
+public:
+    UIMatch(QObject *parent = nullptr, const QString &name = {}, const QString &owner = {})
+        : QObject(parent)
+        , m_name(name)
+        , m_owner(owner)
+    {}
+
+    QString name() const {
+        return m_name;
+    }
+    QString owner() const {
+        return m_owner;
+    }
+
+signals:
+    void nameChanged();
+    void ownerChanged();
+
+private:
+    QString m_name;
+    QString m_owner;
+};
+
+class UIRoster : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(QQmlListProperty<Match> matches READ matches NOTIFY matchesChanged)
+    Q_PROPERTY(int matchCount READ matchCount NOTIFY matchesChanged)
+public:
+    UIRoster(QObject *parent)
+        : QObject(parent)
+    {
+
+    }
+
+    QQmlListProperty<Match> matches() {
+        return QQmlListProperty<Match>(this, m_matches);
+    }
+    int matchCount() const {
+        return m_matches.count();
+    }
+signals:
+    void matchesChanged();
+
+private:
+    QList<Match*> m_matches;
+};
+
+class Client : public QObject {
+    Q_OBJECT
+public:
+    Client(QObject *parent = nullptr)
+        : QObject(parent)
+        , m_socket(new QTcpSocket(this))
+        , m_dataStream(m_socket)
+    {
+        qCritical() << "JESUS CHRIST";
+        connect(m_socket, &QTcpSocket::readyRead, this, &Client::onReadyRead);
+        connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Client::onError);
+        m_socket->connectToHost("127.0.0.1", 16543);
+        qCritical() << m_socket->errorString();
+    }
+private slots:
+    void onReadyRead() {
+        qCritical() << "READY READ";
+        Packet p;
+        m_dataStream >> p;
+        qCritical() << "Packet type " << p.type;
+        switch (p.type) {
+        case Packet::AHOJ:
+            qCritical() << "Got ahoj, sending ahoj";
+            m_dataStream << Packet(Ahoj());
+            break;
+        case Packet::ERROR:
+            qCritical() << "SERVER ERROR: " << p.error;
+            break;
+        case Packet::ROSTER:
+            qCritical() << "GOT ROSTER";
+            for (auto &i : p.roster.matches) {
+                qCritical() << "\tGame" << i.id << ":" << i.name << "by" << i.owner;
+            }
+            break;
+        }
+    }
+    void onError(QAbstractSocket::SocketError err) {
+        qCritical() << "ERROR:" << m_socket->errorString();
+    }
+private:
+    QTcpSocket *m_socket;
+    QDataStream m_dataStream;
 };
 
 #endif // GAME_H

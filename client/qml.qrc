@@ -3,5 +3,8 @@
         <file>main.qml</file>
         <file>Board.qml</file>
         <file>Player.qml</file>
+        <file>Field.qml</file>
+        <file>Game.qml</file>
+        <file>Lobby.qml</file>
     </qresource>
 </RCC>

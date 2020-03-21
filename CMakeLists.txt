@@ -13,4 +13,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt5 COMPONENTS Core Quick LinguistTools REQUIRED)
 
-add_subdirectory(src)
+add_subdirectory(client)
+add_subdirectory(server)
