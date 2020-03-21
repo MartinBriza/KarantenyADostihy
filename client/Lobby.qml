@@ -40,10 +40,18 @@ Item {
                 text: "Tvoje jméno:"
             }
             TextField {
-                text: "Guest_49A3F131"
+                text: client.name
+                onAccepted: client.name = text
             }
             CheckBox {
                 text: "Máš kostku?"
+            }
+        }
+
+        RowLayout {
+            Button {
+                text: "Nová místnost"
+                onClicked: client.create()
             }
         }
 
@@ -86,7 +94,7 @@ Item {
                 }
             }
 
-            model: rosterModel
+            model: client.roster.matches
             delegate: Rectangle {
                 width: parent.width
                 height: rosterItemLayout.height + 7

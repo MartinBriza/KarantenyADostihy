@@ -12,10 +12,12 @@ int main(int argc, char *argv[]) {
     qmlRegisterUncreatableType<Board>("monopoly", 1, 0, "Board", "Created by core");
     qmlRegisterUncreatableType<Player>("monopoly", 1, 0, "Player", "Created by core");
     qmlRegisterUncreatableType<Field>("monopoly", 1, 0, "Field", "Created by core");
+    qmlRegisterUncreatableType<Client>("monopoly", 1, 0, "Client", "Created by core");
+    qmlRegisterUncreatableType<UIRoster>("monopoly", 1, 0, "Roster", "Created by core");
+    qmlRegisterUncreatableType<UIMatch>("monopoly", 1, 0, "Match", "Created by core");
 
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("game", new Game());
-    //new Client();
+    engine.rootContext()->setContextProperty("client", new Client());
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {

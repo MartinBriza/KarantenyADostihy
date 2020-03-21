@@ -15,6 +15,8 @@ class Field;
 class Player;
 class Board;
 class Game;
+class UIRoster;
+class Client;
 
 class Effect : public QObject {
     Q_OBJECT
@@ -167,64 +169,68 @@ private:
     };
 };
 
-class UIMatch : public QObject {
+class UIMatch : public QObject, protected Match {
     Q_OBJECT
-    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
-    Q_PROPERTY(QString owner READ owner NOTIFY ownerChanged)
+    Q_PROPERTY(int id READ idGet CONSTANT)
+    Q_PROPERTY(bool password READ passwordGet CONSTANT)
+    Q_PROPERTY(QString name READ nameGet CONSTANT)
+    Q_PROPERTY(QString owner READ ownerGet CONSTANT)
+    Q_PROPERTY(int players READ playersGet CONSTANT)
+    Q_PROPERTY(int maximumPlayers READ maximumPlayersGet CONSTANT)
 public:
-    UIMatch(QObject *parent = nullptr, const QString &name = {}, const QString &owner = {})
-        : QObject(parent)
-        , m_name(name)
-        , m_owner(owner)
-    {}
+    UIMatch(UIRoster *parent = nullptr, const QString &name = {}, const QString &owner = {});
+    UIMatch(UIRoster *parent, const Match &data);
 
-    QString name() const {
-        return m_name;
-    }
-    QString owner() const {
-        return m_owner;
-    }
+    UIRoster *roster();
+    Client *client();
 
-signals:
-    void nameChanged();
-    void ownerChanged();
+    int idGet() const;
+    bool passwordGet() const;
+    QString nameGet() const;
+    QString ownerGet() const;
+    int playersGet() const;
+    int maximumPlayersGet() const;
+
+public slots:
+    void join(const QString password);
 
 private:
-    QString m_name;
-    QString m_owner;
 };
 
 class UIRoster : public QObject {
     Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<Match> matches READ matches NOTIFY matchesChanged)
+    Q_PROPERTY(QQmlListProperty<UIMatch> matches READ matches NOTIFY matchesChanged)
     Q_PROPERTY(int matchCount READ matchCount NOTIFY matchesChanged)
 public:
-    UIRoster(QObject *parent)
-        : QObject(parent)
-    {
+    UIRoster(Client *parent);
 
-    }
+    Client *client();
 
-    QQmlListProperty<Match> matches() {
-        return QQmlListProperty<Match>(this, m_matches);
-    }
-    int matchCount() const {
-        return m_matches.count();
-    }
+    QQmlListProperty<UIMatch> matches();
+    int matchCount() const;
+public slots:
+    void create();
+
+public slots:
+    void regenerate(const Roster &data);
+
 signals:
     void matchesChanged();
 
 private:
-    QList<Match*> m_matches;
+    QList<UIMatch*> m_matches { };
 };
 
 class Client : public QObject {
     Q_OBJECT
+    Q_PROPERTY(UIRoster* roster READ roster CONSTANT)
+    Q_PROPERTY(QString name READ nameGet WRITE nameSet NOTIFY nameChanged)
 public:
     Client(QObject *parent = nullptr)
         : QObject(parent)
         , m_socket(new QTcpSocket(this))
         , m_dataStream(m_socket)
+        , m_roster(new UIRoster(this))
     {
         qCritical() << "JESUS CHRIST";
         connect(m_socket, &QTcpSocket::readyRead, this, &Client::onReadyRead);
@@ -232,6 +238,28 @@ public:
         m_socket->connectToHost("127.0.0.1", 16543);
         qCritical() << m_socket->errorString();
     }
+
+    UIRoster *roster() {
+        return m_roster;
+    }
+
+    QString nameGet() const {
+        return m_name;
+    }
+    void nameSet(const QString &name) {
+        if (m_name != name) {
+            m_name = name;
+            emit nameChanged();
+            m_dataStream << Packet(Ahoj{m_name});
+        }
+    }
+
+    static QString randomName(int count = 8);
+
+public slots:
+    void join(int id, const QString &password);
+    void create(const QString &name = {});
+
 private slots:
     void onReadyRead() {
         qCritical() << "READY READ";
@@ -241,25 +269,31 @@ private slots:
         switch (p.type) {
         case Packet::AHOJ:
             qCritical() << "Got ahoj, sending ahoj";
-            m_dataStream << Packet(Ahoj());
+            m_dataStream << Packet(Ahoj{m_name});
             break;
         case Packet::ERROR:
             qCritical() << "SERVER ERROR: " << p.error;
             break;
         case Packet::ROSTER:
             qCritical() << "GOT ROSTER";
-            for (auto &i : p.roster.matches) {
-                qCritical() << "\tGame" << i.id << ":" << i.name << "by" << i.owner;
-            }
+            if (m_dataStream.status() == QDataStream::Ok)
+                m_roster->regenerate(p.roster);
+            else
+                qCritical() << "SUMTIN WRONG: " << m_dataStream.status() << m_socket->errorString();
             break;
         }
     }
     void onError(QAbstractSocket::SocketError err) {
         qCritical() << "ERROR:" << m_socket->errorString();
     }
+signals:
+    void nameChanged();
+
 private:
     QTcpSocket *m_socket;
     QDataStream m_dataStream;
+    UIRoster *m_roster;
+    QString m_name { randomName() };
 };
 
 #endif // GAME_H

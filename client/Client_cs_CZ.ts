@@ -5,7 +5,7 @@
     <name>main</name>
     <message>
         <location filename="main.qml" line="10"/>
-        <source>Hello World</source>
+        <source>Karanteny</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

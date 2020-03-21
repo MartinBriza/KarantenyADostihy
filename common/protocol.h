@@ -1,21 +1,105 @@
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
 
+#include <QDebug>
 #include <QDataStream>
 
 struct Ahoj {
-    QString ahoj { "ahoj" };
+    QString ahoj { };
 };
+inline QDataStream &operator<<(QDataStream &str, const Ahoj &item) {
+    str << item.ahoj;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Ahoj &item) {
+    str >> item.ahoj;
+    return str;
+}
 
 struct Match {
-    int id;
-    QString name;
-    QString owner;
+    int id { -1 };
+    bool password { false };
+    QString name {};
+    QString owner {};
+    int players { 0 };
+    int maximumPlayers { 8 };
 };
+inline QDataStream &operator<<(QDataStream &str, const Match &item) {
+    str << item.id << item.password << item.name << item.owner << item.players << item.maximumPlayers;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Match &item) {
+    str >> item.id >> item.password >> item.name >> item.owner >> item.players >> item.maximumPlayers;
+    return str;
+}
 
 struct Roster {
-    QList<Match> matches;
+    QList<Match> matches {};
 };
+inline QDataStream &operator<<(QDataStream &str, const Roster &item) {
+    str << item.matches;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Roster &item) {
+    str >> item.matches;
+    qCritical() << "Roster Read data:";
+    for (auto i : item.matches)
+        qCritical() << "\t" << i.id << i.name << i.owner;
+    return str;
+}
+
+struct Join {
+    int id { -1 };
+    QString password { false };
+};
+inline QDataStream &operator<<(QDataStream &str, const Join &item) {
+    str << item.id << item.password;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Join &item) {
+    str >> item.id >> item.password;
+    return str;
+}
+
+struct Create {
+    QString name {};
+};
+inline QDataStream &operator<<(QDataStream &str, const Create &item) {
+    str << item.name;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Create &item) {
+    str >> item.name;
+    return str;
+}
+
+struct Entered {
+    int id;
+    QString name;
+};
+inline QDataStream &operator<<(QDataStream &str, const Entered &item) {
+    str << item.id << item.name;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Entered &item) {
+    str >> item.id >> item.name;
+    return str;
+}
+
+struct Chat {
+    QString time;
+    QString from;
+    QString text;
+    int urgency;
+};
+inline QDataStream &operator<<(QDataStream &str, const Chat &item) {
+    str << item.time << item.from << item.text << item.urgency;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Chat &item) {
+    str >> item.time >> item.from >> item.text >> item.urgency;
+    return str;
+}
 
 struct Packet {
     enum Type {
@@ -23,40 +107,23 @@ struct Packet {
         ERROR,
         AHOJ,
         MATCH,
-        ROSTER
+        ROSTER,
+        JOIN,
+        CREATE,
+        ENTERED,
+        CHAT
     } type { NONE };
     union {
         QString error;
         Ahoj ahoj;
         Match match;
         Roster roster;
+        Join join;
+        Create create;
+        Entered entered;
+        Chat chat;
     };
     Packet() {}
-    Packet(Packet &&o) {
-        *this = std::move(o);
-    }
-    Packet &operator=(Packet &&o) {
-        clear();
-        type = o.type;
-        o.type = NONE;
-        switch (type) {
-        case NONE:
-            break;
-        case ERROR:
-            error = std::move(o.error);
-            break;
-        case AHOJ:
-            ahoj = std::move(o.ahoj);
-            break;
-        case MATCH:
-            match = std::move(o.match);
-            break;
-        case ROSTER:
-            roster = std::move(o.roster);
-            break;
-        }
-        return *this;
-    }
     Packet(Type type, const QString &text) : type(type) {
         switch (type) {
         case ERROR:
@@ -67,6 +134,42 @@ struct Packet {
     Packet(const Ahoj &d) : type(AHOJ), ahoj(d) { }
     Packet(const Match &d) : type(MATCH), match(d) { }
     Packet(const Roster &d) : type(ROSTER), roster(d) { }
+    Packet(const Join &d) : type(JOIN), join(d) { }
+    Packet(const Create &d) : type(CREATE), create(d) { }
+    Packet(const Entered &d) : type(ENTERED), entered(d) { }
+    Packet(const Chat &d) : type(CHAT), chat(d) { }
+    void setType(Type type) {
+        clear();
+        this->type = type;
+        switch(this->type) {
+        case NONE:
+            break;
+        case ERROR:
+            new (&error) QString();
+            break;
+        case AHOJ:
+            new (&ahoj) Ahoj();
+            break;
+        case MATCH:
+            new (&match) Match();
+            break;
+        case ROSTER:
+            new (&roster) Roster();
+            break;
+        case JOIN:
+            new (&join) Join();
+            break;
+        case CREATE:
+            new (&create) Create();
+            break;
+        case ENTERED:
+            new (&entered) Entered();
+            break;
+        case CHAT:
+            new (&chat) Chat();
+            break;
+        }
+    }
     void clear() {
         switch(type) {
         case NONE:
@@ -83,6 +186,18 @@ struct Packet {
         case ROSTER:
             roster.~Roster();
             break;
+        case JOIN:
+            join.~Join();
+            break;
+        case CREATE:
+            create.~Create();
+            break;
+        case ENTERED:
+            entered.~Entered();
+            break;
+        case CHAT:
+            chat.~Chat();
+            break;
         }
         type = NONE;
     }
@@ -91,37 +206,11 @@ struct Packet {
     }
 };
 
-inline QDataStream &operator<<(QDataStream &str, const Ahoj &item) {
-    str << item.ahoj;
-    return str;
-}
-inline QDataStream &operator>>(QDataStream &str, Ahoj &item) {
-    str >> item.ahoj;
-    return str;
-}
-
-inline QDataStream &operator<<(QDataStream &str, const Match &item) {
-    str << item.id << item.name << item.owner;
-    return str;
-}
-inline QDataStream &operator>>(QDataStream &str, Match &item) {
-    str >> item.id >> item.name >> item.owner;
-    return str;
-}
-
-inline QDataStream &operator<<(QDataStream &str, const Roster &item) {
-    str << item.matches;
-    return str;
-}
-inline QDataStream &operator>>(QDataStream &str, Roster &item) {
-    str >> item.matches;
-    return str;
-}
-
 inline QDataStream &operator<<(QDataStream &str, const Packet &item) {
     if (item.type == Packet::NONE)
         return str;
-    str << (int&) item.type;
+    int type = item.type;
+    str << type;
     switch (item.type) {
     case Packet::AHOJ:
         str << item.ahoj;
@@ -135,6 +224,18 @@ inline QDataStream &operator<<(QDataStream &str, const Packet &item) {
     case Packet::ROSTER:
         str << item.roster;
         break;
+    case Packet::JOIN:
+        str << item.join;
+        break;
+    case Packet::CREATE:
+        str << item.create;
+        break;
+    case Packet::ENTERED:
+        str << item.entered;
+        break;
+    case Packet::CHAT:
+        str << item.chat;
+        break;
     default:
         str.setStatus(QDataStream::WriteFailed);
     }
@@ -143,31 +244,40 @@ inline QDataStream &operator<<(QDataStream &str, const Packet &item) {
 inline QDataStream &operator>>(QDataStream &str, Packet &item) {
     int type;
     str >> type;
+    item.setType(Packet::Type(type));
     switch (type) {
     case Packet::NONE:
         break;
     case Packet::AHOJ: {
-        Ahoj d;
-        str >> d;
-        item = Packet(d);
+        str >> item.ahoj;
         break;
     }
     case Packet::ERROR: {
-        QString d;
-        str >> d;
-        item = Packet(Packet::ERROR, d);
+        str >> item.error;
         break;
     }
     case Packet::MATCH: {
-        Match d;
-        str >> d;
-        item = Packet(d);
+        str >> item.match;
         break;
     }
     case Packet::ROSTER: {
-        Roster d;
-        str >> d;
-        item = Packet(d);
+        str >> item.roster;
+        break;
+    }
+    case Packet::JOIN: {
+        str >> item.create;
+        break;
+    }
+    case Packet::CREATE: {
+        str >> item.create;
+        break;
+    }
+    case Packet::ENTERED: {
+        str >> item.entered;
+        break;
+    }
+    case Packet::CHAT: {
+        str >> item.chat;
         break;
     }
     default: {

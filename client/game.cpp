@@ -117,3 +117,110 @@ Board *Game::board() {
 QQmlListProperty<Player> Game::players() {
     return QQmlListProperty<Player>(this, m_players);
 }
+
+UIMatch::UIMatch(UIRoster *parent, const QString &name, const QString &owner)
+    : QObject(parent)
+    , Match()
+{
+    this->name = name;
+    this->owner = owner;
+}
+
+UIMatch::UIMatch(UIRoster *parent, const Match &data)
+    : QObject(parent)
+    , Match(data)
+{
+
+}
+
+UIRoster *UIMatch::roster() {
+    return qobject_cast<UIRoster*>(parent());
+}
+
+Client *UIMatch::client() {
+    return roster()->client();
+}
+
+int UIMatch::idGet() const {
+    return id;
+}
+
+bool UIMatch::passwordGet() const {
+    return password;
+}
+
+QString UIMatch::nameGet() const {
+    return name;
+}
+
+QString UIMatch::ownerGet() const {
+    return owner;
+}
+
+int UIMatch::playersGet() const {
+    return players;
+}
+
+int UIMatch::maximumPlayersGet() const {
+    return maximumPlayers;
+}
+
+void UIMatch::join(const QString password) {
+    client()->join(id, password);
+}
+
+QString Client::randomName(int count) {
+    const QString alphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+
+    QString name = "Guest ";
+    for(int i = 0; i < count; ++i) {
+        int index = qrand() % alphabet.count();
+        QChar next = alphabet.at(index);
+        name.append(next);
+    }
+    return name;
+}
+
+void Client::join(int id, const QString &password) {
+    m_dataStream << Packet(Join{id, password});
+}
+
+void Client::create(const QString &name) {
+    if (name.isEmpty())
+        m_dataStream << Packet(Create{m_name + "'s game"});
+    else
+        m_dataStream << Packet(Create{name});
+}
+
+UIRoster::UIRoster(Client *parent)
+    : QObject(parent)
+{
+
+}
+
+Client *UIRoster::client() {
+    return qobject_cast<Client*>(parent());
+}
+
+QQmlListProperty<UIMatch> UIRoster::matches() {
+    return QQmlListProperty<UIMatch>(this, m_matches);
+}
+
+int UIRoster::matchCount() const {
+    return m_matches.count();
+}
+
+void UIRoster::create() {
+    client()->create();
+}
+
+void UIRoster::regenerate(const Roster &data) {
+    for (auto i : m_matches)
+        i->deleteLater();
+    m_matches.clear();
+    emit matchesChanged();
+    for (auto &i : data.matches) {
+        m_matches.append(new UIMatch(this, i));
+    }
+    emit matchesChanged();
+}
