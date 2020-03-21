@@ -9,23 +9,15 @@
 
 class ClientConnection;
 
-struct Game {
-    int id;
-    QString name;
+struct Game : public Match {
+    Game(const Match& match)
+        : Match(match) {}
     QList<ClientConnection*> clients;
-    int capacity;
-    QString password;
-    ~Game() {
-    }
 };
 
-inline Roster roster {{
-}};
+inline QSet<Game*> games {};
 
-inline QMap<int, Game> games {
-};
-
-inline int lastID { 2 };
+inline int lastID { 1 };
 
 inline QList<QColor> colors {
     Qt::red,
@@ -77,6 +69,10 @@ private slots:
             m_state = AHOJ_RECEIVED;
             m_clientName = p.ahoj.ahoj;
             qCritical() << "Client is called" << m_clientName;
+            Roster roster;
+            for (auto i : games) {
+                roster.matches.append(*i);
+            }
             m_dataStream << Packet(roster);
         }
         else if (m_clientName.isEmpty()) {
@@ -88,92 +84,32 @@ private slots:
         else {
             switch (p.type) {
             case Packet::ROSTER: {
+                Roster roster;
+                for (auto &i : games) {
+                    roster.matches.append(*i);
+                }
                 m_dataStream << Packet(roster);
                 break;
             }
             case Packet::CREATE: {
-                roster.matches.append(Match { ++lastID, false, p.create.name, m_clientName, 1, 8 });
-                auto gameIt = games.insert(lastID, Game { lastID, p.create.name, { this }, p.create.capacity, p.create.password });
+                auto gameIt = games.insert(new Game(Match{lastID, p.create.password, p.create.name, m_clientName, 0, p.create.capacity}));
                 auto game = *gameIt;
                 m_dataStream << Packet(Entered{ lastID, p.create.name });
-                QList<Opponent> opponents;
-                bool first;
-                for (auto i : game.clients) {
-                    Opponent o;
-                    o.name = i->m_clientName;
-                    o.color = i->m_clientColor;
-                    o.ready = i->m_clientReady;
-                    o.you = i == this;
-                    o.money = i->m_money;
-                    o.leader = first;
-                    first = false;
-                    opponents.append(o);
-                }
-                m_dataStream << Packet(opponents);
-                break;
+                updateOpponents(game);
             }
             case Packet::JOIN: {
                 if (p.join.id < 0) {
-                    for (auto &game : games) {
-                        if (game.clients.contains(this)) {
-                            game.clients.removeOne(this);
-                            for (auto client : game.clients) {
-                                QList<Opponent> opponents;
-                                bool first;
-                                for (auto i : game.clients) {
-                                    Opponent o;
-                                    o.name = i->m_clientName;
-                                    o.color = i->m_clientColor;
-                                    o.ready = i->m_clientReady;
-                                    o.you = i == client;
-                                    o.money = i->m_money;
-                                    o.leader = first;
-                                    first = false;
-                                    opponents.append(o);
-                                }
-                                client->m_dataStream << Packet(opponents);
-                            }
-                        }
-                        m_dataStream << Packet(Entered{ -1, {} });
-                    }
-                } if (games.contains(p.join.id)) {
-                    auto &game = games[p.join.id];
-                    if (game.clients.count() >= game.capacity)
-                        m_dataStream << Packet(Packet::ERROR, "This game is full");
-                    else if (!game.password.isEmpty() && game.password != p.join.password)
-                        m_dataStream << Packet(Packet::ERROR, "Wrong password");
-                    else {
-                        game.clients.append(this);
-                        m_dataStream << Packet(Entered{ game.id, game.name });
-                        // totally clean
-                        int position = 0;
-                        for (auto client : game.clients) {
-                            QList<Opponent> opponents;
-                            bool first;
-                            for (auto i : game.clients) {
-                                Opponent o;
-                                o.name = i->m_clientName;
-                                o.color = i->m_clientColor;
-                                o.ready = i->m_clientReady;
-                                o.you = i == client;
-                                o.money = i->m_money;
-                                o.leader = first;
-                                first = false;
-                                opponents.append(o);
-                            }
-                            client->m_dataStream << Packet(opponents);
-                            client->m_clientColor = colors[position];
-                            position++;
-                        }
-                    }
+                    leaveGame();
+                } else {
+                    joinGame(p.join.id, p.join.password);
                 }
                 break;
             }
             case Packet::CHAT: {
-                for (auto &i : games) {
+                for (auto *i : games) {
                     // another great design decision
-                    if (i.clients.contains(this)) {
-                        for (auto c : i.clients) {
+                    if (i->clients.contains(this)) {
+                        for (auto c : i->clients) {
                             if (c->m_socket->isWritable())
                                 c->m_dataStream << Packet(Chat{ p.chat.time, p.chat.from, p.chat.message, 0 });
                         }
@@ -188,6 +124,71 @@ private slots:
 
     }
 private:
+    void joinGame(int id, const QString &password) {
+        for (auto game : games) {
+            if (game->id == id) {
+                if (game->clients.contains(this))
+                    return;
+                if (game->clients.count() >= game->maximumPlayers) {
+                    m_dataStream << Packet(Packet::ERROR, "This game is full");
+                    return;
+                }
+                else if (!game->password.isEmpty() && game->password != password) {
+                    m_dataStream << Packet(Packet::ERROR, "Wrong password");
+                    return;
+                }
+                leaveGame(false);
+                game->clients.append(this);
+                game->players++;
+                m_clientRoom = id;
+                m_dataStream << Packet(Entered{ game->id, game->name });
+                updateOpponents(game);
+            }
+        }
+    }
+    void leaveGame(bool notify = true) {
+        m_dataStream << Packet(Entered{ -1, {} });
+        m_clientRoom = 0;
+        for (auto game : games) {
+            if (game->clients.contains(this)) {
+                game->clients.removeOne(this);
+                game->players--;
+                if (notify)
+                    updateOpponents(game);
+                handleEmptyGame(game);
+                return;
+            }
+        }
+    }
+    void handleEmptyGame(Game *game) {
+        if (game->clients.count() == 0) {
+            delete game;
+            games.remove(game);
+        }
+    }
+    void updateOpponents(Game *game) {
+        // totally clean
+        int position = 0;
+        for (auto client : game->clients) {
+            QList<Opponent> opponents;
+            bool first;
+            for (auto i : game->clients) {
+                Opponent o;
+                o.name = i->m_clientName;
+                o.color = i->m_clientColor;
+                o.ready = i->m_clientReady;
+                o.you = i == client;
+                o.money = i->m_money;
+                o.leader = first;
+                first = false;
+                opponents.append(o);
+            }
+            client->m_dataStream << Packet(opponents);
+            client->m_clientColor = colors[position];
+            position++;
+        }
+    }
+
     QTcpSocket *m_socket;
     QDataStream m_dataStream;
     State m_state { PRE_AHOJ };

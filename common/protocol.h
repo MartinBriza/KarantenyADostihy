@@ -19,14 +19,14 @@ inline QDataStream &operator>>(QDataStream &str, Ahoj &item) {
 
 struct Match {
     int id { -1 };
-    bool password { false };
-    QString name {};
-    QString owner {};
+    QString password { };
+    QString name { };
+    QString owner { };
     int players { 0 };
     int maximumPlayers { 8 };
 };
 inline QDataStream &operator<<(QDataStream &str, const Match &item) {
-    str << item.id << item.password << item.name << item.owner << item.players << item.maximumPlayers;
+    str << item.id << (item.password.isEmpty() ? QString() : QString("***")) << item.name << item.owner << item.players << item.maximumPlayers;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Match &item) {

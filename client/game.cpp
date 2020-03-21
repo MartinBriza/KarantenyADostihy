@@ -146,7 +146,7 @@ int UIMatch::idGet() const {
 }
 
 bool UIMatch::passwordGet() const {
-    return password;
+    return !password.isEmpty();
 }
 
 QString UIMatch::nameGet() const {
