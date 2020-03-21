@@ -338,11 +338,16 @@ public:
         , m_socket(new QTcpSocket(this))
         , m_dataStream(m_socket)
         , m_roster(new UIRoster(this))
+        , m_refreshTimer()
     {
+        m_refreshTimer.setInterval(1000);
+        m_refreshTimer.setSingleShot(false);
+        connect(&m_refreshTimer, &QTimer::timeout, this, &Client::refreshRoster);
         connect(m_socket, &QTcpSocket::readyRead, this, &Client::onReadyRead);
         connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Client::onError);
-        QTimer::singleShot(1000, [this]() {
+        QTimer::singleShot(0, [this]() {
             m_socket->connectToHost("127.0.0.1", 16543);
+            m_refreshTimer.start();
         });
     }
 
@@ -453,6 +458,7 @@ private:
     UILobby *m_lobby { nullptr };
     QList<UIChat*> m_chat {};
     QList<UIOpponent*> m_opponents {};
+    QTimer m_refreshTimer;
 };
 
 #endif // GAME_H

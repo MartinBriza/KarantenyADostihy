@@ -58,6 +58,7 @@ private slots:
     void onSocketStateChanged() {
         qCritical() << "SOCKET STATE: " << m_socket->state();
         if (m_socket->state() == QAbstractSocket::UnconnectedState) {
+            leaveGame();
             deleteLater();
         }
     }
@@ -92,10 +93,9 @@ private slots:
                 break;
             }
             case Packet::CREATE: {
-                auto gameIt = games.insert(new Game(Match{lastID, p.create.password, p.create.name, m_clientName, 0, p.create.capacity}));
+                auto gameIt = games.insert(new Game(Match{lastID++, p.create.password, p.create.name, m_clientName, 0, p.create.capacity}));
                 auto game = *gameIt;
-                m_dataStream << Packet(Entered{ lastID, p.create.name });
-                updateOpponents(game);
+                joinGame(game->id, p.create.password);
             }
             case Packet::JOIN: {
                 if (p.join.id < 0) {
@@ -121,7 +121,8 @@ private slots:
         }
     }
     void onError(QAbstractSocket::SocketError err) {
-
+        leaveGame();
+        deleteLater();
     }
 private:
     void joinGame(int id, const QString &password) {
