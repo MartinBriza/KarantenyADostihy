@@ -2,6 +2,8 @@ import QtQuick 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.12
 
+import monopoly 1.0
+
 Item {
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
@@ -13,18 +15,6 @@ Item {
             horizontalAlignment: Text.AlignHCenter
             text: client.lobby.name
             font.pixelSize: 32
-        }
-
-        ListModel {
-            id: mockChatModel
-            ListElement { time: "11:32"; from: "Bizon"; message: "AHOJ"; urgency: 0 }
-            ListElement { time: "11:33"; from: ""; message: "<Guest> si odebral 12342 peněz."; urgency: 3 }
-            ListElement { time: "11:34"; from: ""; message: "<Bizon> je ready."; urgency: 1 }
-        }
-        ListModel {
-            id: mockOpponentModel
-            ListElement { name: "Bizon"; playerColor: "blue"; money: 30000; leader: true; ready: true; you: false }
-            ListElement { name: "Guest"; playerColor: "red"; money: 12342; leader: false; ready: false; you: true }
         }
 
         RowLayout {
@@ -47,7 +37,7 @@ Item {
         Flow {
             Layout.fillWidth: true
             Repeater {
-                model: mockOpponentModel
+                model: client.opponents
                 Rectangle {
                     width: childrenRect.width + 18
                     height: childrenRect.height + 18
@@ -61,7 +51,7 @@ Item {
                                 height: 8
                                 width: height
                                 radius: height / 2
-                                color: playerColor
+                                color: modelData.color
                             }
 
                             Text {
@@ -100,7 +90,7 @@ Item {
                     ListView {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        model: mockChatModel
+                        model: client.chat
                         delegate: RowLayout {
                             width: parent.width
                             Text {
@@ -121,6 +111,10 @@ Item {
                     }
                     TextField {
                         Layout.fillWidth: true
+                        onAccepted: {
+                            client.sendMessage(text)
+                            text = ""
+                        }
                     }
                 }
             }

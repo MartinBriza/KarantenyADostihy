@@ -18,6 +18,8 @@ int main(int argc, char *argv[]) {
     qmlRegisterUncreatableType<UIRoster>("monopoly", 1, 0, "RosterData", "Created by core");
     qmlRegisterUncreatableType<UIMatch>("monopoly", 1, 0, "MatchData", "Created by core");
     qmlRegisterUncreatableType<UILobby>("monopoly", 1, 0, "LobbyData", "Created by core");
+    qmlRegisterUncreatableType<UIChat>("monopoly", 1, 0, "ChatData", "Created by core");
+    qmlRegisterUncreatableType<UIOpponent>("monopoly", 1, 0, "OpponentData", "Created by core");
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("client", new Client());

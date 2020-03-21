@@ -192,6 +192,10 @@ void Client::create(const QString &name) {
         m_dataStream << Packet(Create{name});
 }
 
+void Client::sendMessage(const QString &message) {
+    m_dataStream << Packet(Chat { QDateTime().time().toString(), m_name, message, 0 });
+}
+
 UIRoster::UIRoster(Client *parent)
     : QObject(parent)
 {

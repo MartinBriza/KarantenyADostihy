@@ -106,15 +106,15 @@ inline QDataStream &operator>>(QDataStream &str, Opponent &item) {
 struct Chat {
     QString time;
     QString from;
-    QString text;
+    QString message;
     int urgency;
 };
 inline QDataStream &operator<<(QDataStream &str, const Chat &item) {
-    str << item.time << item.from << item.text << item.urgency;
+    str << item.time << item.from << item.message << item.urgency;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Chat &item) {
-    str >> item.time >> item.from >> item.text >> item.urgency;
+    str >> item.time >> item.from >> item.message >> item.urgency;
     return str;
 }
 

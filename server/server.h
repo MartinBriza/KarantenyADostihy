@@ -41,11 +41,15 @@ public:
     {
         connect(m_socket, &QTcpSocket::readyRead, this, &ClientConnection::onReadyRead);
         connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &ClientConnection::onError);
+        connect(m_socket, &QTcpSocket::stateChanged, this, &ClientConnection::onSocketStateChanged);
         m_dataStream << Packet{Ahoj{}};
         m_state = AHOJ_SENT;
         qCritical() << "Sent ahoj, error:" << m_dataStream.status() << m_socket->errorString();
     }
 private slots:
+    void onSocketStateChanged() {
+
+    }
     void onReadyRead() {
         Packet p;
         m_dataStream >> p;
@@ -95,20 +99,35 @@ private slots:
                     else {
                         game.clients.append(this);
                         m_dataStream << Packet(Entered{ game.id, game.name });
-                        QList<Opponent> opponents;
-                        bool first;
-                        for (auto i : game.clients) {
-                            Opponent o;
-                            o.name = i->m_clientName;
-                            o.color = i->m_clientColor;
-                            o.ready = i->m_clientReady;
-                            o.you = i == this;
-                            o.money = i->m_money;
-                            o.leader = first;
-                            first = false;
-                            opponents.append(o);
+                        // totally clean
+                        for (auto client : game.clients) {
+                            QList<Opponent> opponents;
+                            bool first;
+                            for (auto i : game.clients) {
+                                Opponent o;
+                                o.name = i->m_clientName;
+                                o.color = i->m_clientColor;
+                                o.ready = i->m_clientReady;
+                                o.you = i == client;
+                                o.money = i->m_money;
+                                o.leader = first;
+                                first = false;
+                                opponents.append(o);
+                            }
+                            client->m_dataStream << Packet(opponents);
                         }
-                        m_dataStream << Packet(opponents);
+                    }
+                }
+                break;
+            }
+            case Packet::CHAT: {
+                for (auto &i : games) {
+                    // another great design decision
+                    if (i.clients.contains(this)) {
+                        for (auto c : i.clients) {
+                            if (c->m_socket->isWritable())
+                                c->m_dataStream << Packet(Chat{ p.chat.time, p.chat.from, p.chat.message, 0 });
+                        }
                     }
                 }
                 break;

@@ -254,12 +254,76 @@ private:
     QString m_name;
 };
 
+class UIChat : public QObject, public Chat {
+    Q_OBJECT
+    Q_PROPERTY(QString time READ timeGet CONSTANT)
+    Q_PROPERTY(QString from READ fromGet CONSTANT)
+    Q_PROPERTY(QString message READ messageGet CONSTANT)
+    Q_PROPERTY(int urgency READ urgencyGet CONSTANT)
+public:
+    UIChat(QObject *parent, const Chat &data)
+        : QObject(parent)
+        , Chat(data)
+    {
+
+    }
+    QString timeGet() const {
+        return time;
+    }
+    QString fromGet() const {
+        return from;
+    }
+    QString messageGet() const {
+        return message;
+    }
+    int urgencyGet() const {
+        return urgency;
+    }
+};
+
+class UIOpponent : public QObject, public Opponent {
+    Q_OBJECT
+    Q_PROPERTY(QString name READ nameGet CONSTANT)
+    Q_PROPERTY(QColor color READ colorGet CONSTANT)
+    Q_PROPERTY(int money READ moneyGet CONSTANT)
+    Q_PROPERTY(bool leader READ leaderGet CONSTANT)
+    Q_PROPERTY(bool ready READ readyGet CONSTANT)
+    Q_PROPERTY(bool you READ youGet CONSTANT)
+public:
+    UIOpponent(QObject *parent, const Opponent &data)
+        : QObject(parent)
+        , Opponent(data)
+    {
+
+    }
+    QString nameGet() const {
+        return name;
+    }
+    QColor colorGet() const {
+        return color;
+    }
+    int moneyGet() const {
+        return money;
+    }
+    bool leaderGet() const {
+        return leader;
+    }
+    bool readyGet() const {
+        return ready;
+    }
+    bool youGet() const {
+        return you;
+    }
+};
+
 class Client : public QObject {
     Q_OBJECT
     Q_PROPERTY(UIRoster* roster READ roster CONSTANT)
     Q_PROPERTY(QString name READ nameGet WRITE nameSet NOTIFY nameChanged)
     Q_PROPERTY(State state READ stateGet NOTIFY stateChanged)
     Q_PROPERTY(UILobby *lobby READ lobbyGet NOTIFY lobbyChanged)
+    Q_PROPERTY(QQmlListProperty<UIChat> chat READ chatGet NOTIFY chatChanged)
+    Q_PROPERTY(QQmlListProperty<UIOpponent> opponents READ opponentsGet NOTIFY opponentsChanged)
 public:
     enum State {
         ROSTER,
@@ -275,11 +339,11 @@ public:
         , m_dataStream(m_socket)
         , m_roster(new UIRoster(this))
     {
-        qCritical() << "JESUS CHRIST";
         connect(m_socket, &QTcpSocket::readyRead, this, &Client::onReadyRead);
         connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Client::onError);
-        m_socket->connectToHost("127.0.0.1", 16543);
-        qCritical() << m_socket->errorString();
+        QTimer::singleShot(1000, [this]() {
+            m_socket->connectToHost("127.0.0.1", 16543);
+        });
     }
 
     UIRoster *roster() {
@@ -300,11 +364,19 @@ public:
         }
     }
 
+    QQmlListProperty<UIChat> chatGet() {
+        return QQmlListProperty<UIChat>(this, m_chat);
+    }
+    QQmlListProperty<UIOpponent> opponentsGet() {
+        return QQmlListProperty<UIOpponent>(this, m_opponents);
+    }
+
     static QString randomName(int count = 8);
 
 public slots:
     void join(int id, const QString &password);
     void create(const QString &name = {});
+    Q_INVOKABLE void sendMessage(const QString &message);
 
 private slots:
     void onReadyRead() {
@@ -337,8 +409,16 @@ private slots:
                 break;
             case Packet::OPPONENTS:
                 qCritical() << "OPPONENTS!";
-                for (auto i : p.opponents)
-                    qCritical() << "\t" << i.name;
+                m_opponents.clear();
+                for (auto &i : p.opponents) {
+                    m_opponents.append(new UIOpponent(this, i));
+                }
+                emit opponentsChanged();
+                break;
+            case Packet::CHAT:
+                qCritical()  << "SPAM";
+                m_chat.append(new UIChat(this, p.chat));
+                emit chatChanged();
                 break;
             }
         }
@@ -350,13 +430,17 @@ signals:
     void nameChanged();
     void stateChanged();
     void lobbyChanged();
+    void chatChanged();
+    void opponentsChanged();
 
 private:
-    QTcpSocket *m_socket;
+    QTcpSocket *m_socket { nullptr };
     QDataStream m_dataStream;
-    UIRoster *m_roster;
+    UIRoster *m_roster { nullptr };
     QString m_name { randomName() };
-    UILobby *m_lobby;
+    UILobby *m_lobby { nullptr };
+    QList<UIChat*> m_chat {};
+    QList<UIOpponent*> m_opponents {};
 };
 
 #endif // GAME_H
