@@ -35,25 +35,26 @@ jobs:
       run: |
         cd build
         cmake -P cmake_install.cmake
-        mv src/Client.exe .
+        mkdir -p release
+        mv client/Release/Client.exe release/
     - name: windeployqt
       if: github.event_name == 'create'
       shell: bash
       run: |
+        cd build/release
         $Qt5_Dir/bin/windeployqt.exe --verbose 2 --release --compiler-runtime --angle --qmldir .. Client.exe
     - name: Package the application
       if: github.event_name == 'create'
       shell: bash
       run: |
-        cd release
-        rm $(find . -name \*.lib)
+        cd build/release
         7z a release.zip *
     - name: Upload
       if: github.event_name == 'create'
       shell: bash
       run: |
         TAG_NAME=$(./get-tag-name.sh)
-        ./upload-github-release-asset.sh github_api_token=${{ secrets.GITHUB_TOKEN }} tag="$TAG_NAME" filename="release.zip" renameto="KarantenyADostihy-${TAG_NAME/v/}".zip
+        ./upload-github-release-asset.sh github_api_token=${{ secrets.GITHUB_TOKEN }} tag="$TAG_NAME" filename="build/release/release.zip" renameto="KarantenyADostihy-win-${TAG_NAME/v/}".zip
 
   mingw:
     runs-on: windows-2019
