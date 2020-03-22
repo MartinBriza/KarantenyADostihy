@@ -114,10 +114,10 @@ jobs:
         sudo flatpak install --system -y flathub org.kde.Sdk//5.12
     - name: Build Linux Flatpak package - KDE based
       run: |
-        pushd dist/linux/flatpak
+        pushd dist
         sudo flatpak-builder --repo=flatpak-repo --force-clean flatpak-build cz.rtinbriza.ma.Karanteny.json
         flatpak build-bundle flatpak-repo cz.rtinbriza.ma.Karanteny.flatpak cz.rtinbriza.ma.Karanteny
-        mv cz.rtinbriza.ma.Karanteny.flatpak ../../..
+        mv cz.rtinbriza.ma.Karanteny.flatpak ..
         popd
     - name: Upload to GitHub
       run: |
