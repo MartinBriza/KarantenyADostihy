@@ -386,7 +386,7 @@ public:
         connect(m_socket, &QTcpSocket::readyRead, this, &Client::onReadyRead);
         connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Client::onError);
         QTimer::singleShot(0, [this]() {
-            m_socket->connectToHost("127.0.0.1", 16543);
+            m_socket->connectToHost("46.36.35.81", 16543);
             m_refreshTimer.start();
         });
     }

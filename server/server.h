@@ -201,6 +201,7 @@ private slots:
                                             m_dataStream << Packet(Packet::ERROR, "Na tuhle kartu nemáš dost peněz");
                                             break;
                                         }
+                                        m_money -= card->price;
                                         game->ownerships[card] = i.player;
                                         updateOwnerships(game);
                                         updateOpponents(game);
