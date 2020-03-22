@@ -148,6 +148,7 @@ jobs:
         make -j2
     - name: Create the dmg
       run: |
+        TAG_NAME=$(./dist/get-tag-name.sh)
         cd build
         /usr/local/opt/qt5/bin/macdeployqt client/Client.app -qmldir=../client
         create-dmg client/Client.app || true
