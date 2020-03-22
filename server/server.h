@@ -167,7 +167,7 @@ private slots:
                             }
                             if (c->m_clientReady != i.ready) {
                                 qCritical() << "Changing ready to" << i.ready;
-                                sendMessage(game, Chat{QString("<%1> is now %1 ready.").arg(m_clientName).arg(i.ready ? "" : "not")});
+                                sendMessage(game, Chat{QString("<%1> is now %2 ready.").arg(m_clientName).arg(i.ready ? "" : "not")});
                                 c->m_clientReady = i.ready;
                                 changed = true;
                             }
@@ -199,13 +199,17 @@ private slots:
                             for (auto card : game->ownerships.keys()) {
                                 if (i.card == card->id) {
                                     if (game->ownerships[card] == 0) {
+                                        if (m_position != card->id - 1) {
+                                            m_dataStream << Packet(Packet::ERROR, "Koupit si můžeš jen kartou, na který stojíš");
+                                            break;
+                                        }
                                         if (m_money < card->price) {
                                             m_dataStream << Packet(Packet::ERROR, "Na tuhle kartu nemáš dost peněz");
                                             break;
                                         }
                                         m_money -= card->price;
                                         game->ownerships[card] = i.player;
-                                        sendMessage(game, Chat{QString("<%1> bought %2.").arg(m_clientName).arg(card->name)});
+                                        sendMessage(game, Chat{QString("<%1> bought %2 for.").arg(m_clientName).arg(card->name).arg(card->price)});
                                         updateOwnerships(game);
                                         updateOpponents(game);
                                     } else if (game->ownerships[card] == m_clientId) {
@@ -327,7 +331,7 @@ private:
     QString m_clientName {};
     bool m_clientReady { false };
     int m_clientId { lastPlayerID++ };
-    int m_money { 5000 };
+    int m_money { 30000 };
     QColor m_clientColor { Qt::red };
     int m_position { 0 };
 };
