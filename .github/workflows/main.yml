@@ -42,7 +42,7 @@ jobs:
       shell: bash
       run: |
         cd build/release
-        $Qt5_Dir/bin/windeployqt.exe --verbose 2 --release --compiler-runtime --angle --qmldir .. Client.exe
+        $Qt5_Dir/bin/windeployqt.exe --verbose 2 --release --compiler-runtime --angle --qmldir ../.. Client.exe
     - name: Package the application
       if: github.event_name == 'create'
       shell: bash
