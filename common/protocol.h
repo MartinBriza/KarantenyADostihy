@@ -227,7 +227,7 @@ inline QDataStream &operator<<(QDataStream &str, const Card &item) {
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Card &item) {
-    str >> item.name << item.effect;
+    str >> item.name >> item.effect;
     return str;
 }
 

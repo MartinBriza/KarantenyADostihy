@@ -198,6 +198,18 @@ void Client::buy(int id) {
     m_dataStream << Packet(QList<Ownership>{Ownership{m_thisPlayerId, id}});
 }
 
+void Client::drawCard(int type) {
+    if (type == Effect::DRAW_CHANCE) {
+        m_dataStream << Packet(Card{"chance", {}});
+    }
+    else if (type == Effect::DRAW_FINANCE) {
+        m_dataStream << Packet(Card{"finance", {}});
+    }
+    else {
+        qCritical() << "DrawCard called with type" << type << "instead of" << (int)Effect::DRAW_CHANCE << "or" << (int)Effect::DRAW_FINANCE;
+    }
+}
+
 UIRoster::UIRoster(Client *parent)
     : QObject(parent)
 {

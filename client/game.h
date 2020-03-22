@@ -436,6 +436,7 @@ public slots:
     void startGame();
     void move(int id, int position);
     void buy(int id);
+    void drawCard(int type);
 
 private slots:
     void onReadyRead() {

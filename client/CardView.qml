@@ -72,6 +72,13 @@ Dialog {
                 Layout.alignment: Qt.AlignHCenter
                 visible: model.type === FieldData.DECK
                 text: "Táhnout"
+                onClicked: {
+                    // ugh
+                    if (model.name === "Náhoda")
+                        client.drawCard(1)
+                    else
+                        client.drawCard(2)
+                }
             }
         }
 
