@@ -152,7 +152,7 @@ jobs:
     - name: Create the dmg
       run: |
         cd build
-        $Qt5_Dir/bin/macdeployqt client/Client.app -qmldir=../client
+        /usr/local/opt/qt5/bin/macdeployqt client/Client.app -qmldir=../client
         create-dmg client/Client.app
         mv " .dmg" ../KarantenyADostihy-macos-${TAG_NAME/v/}.dmg
     - name: Upload to GitHub
