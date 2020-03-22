@@ -136,6 +136,7 @@ jobs:
         brew install qt
         brew install openssl
         brew install cmake
+        node install --global create-dmg
     - name: Build the application
       run: |
         TAG_NAME=$(./dist/get-tag-name.sh)
@@ -145,3 +146,17 @@ jobs:
         export OPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1/
         cmake ..
         make -j2
+    - name: Install the application
+      run: |
+        make install
+    - name: Create the dmg
+      run: |
+        cd build
+        $Qt5_Dir/bin/macdeployqt client/Client.app -qmldir=../client
+        create-dmg client/Client.app
+        mv " .dmg" ../KarantenyADostihy-macos-${TAG_NAME/v/}.dmg
+    - name: Upload to GitHub
+      if: github.event_name == 'create'
+      run: |
+        TAG_NAME=$(./dist/get-tag-name.sh)
+        ./dist/upload-github-release-asset.sh github_api_token=${{ secrets.GITHUB_TOKEN }} tag="$TAG_NAME" filename="cz.rtinbriza.ma.Karanteny.flatpak" renameto="cz.rtinbriza.ma.Karanteny-${TAG_NAME/v/}.flatpak"

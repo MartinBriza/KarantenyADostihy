@@ -26,7 +26,7 @@ if(ANDROID)
       ${TS_FILES}
     )
 else()
-    add_executable(Client
+    add_executable(Client MACOSX_BUNDLE
       qml.qrc
       ${SOURCE_FILES}
       ${TS_FILES}
