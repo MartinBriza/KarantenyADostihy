@@ -22,7 +22,7 @@ jobs:
     - name: Build the application
       shell: bash
       run: |
-        TAG_NAME=$(./get-tag-name.sh)
+        TAG_NAME=$(./dist/get-tag-name.sh)
         export CMAKE_PREFIX_PATH="$Qt5_Dir/lib/cmake"
         export PATH="$Qt5_Dir/bin":"$PATH"
         mkdir build
@@ -53,8 +53,8 @@ jobs:
       if: github.event_name == 'create'
       shell: bash
       run: |
-        TAG_NAME=$(./get-tag-name.sh)
-        ./upload-github-release-asset.sh github_api_token=${{ secrets.GITHUB_TOKEN }} tag="$TAG_NAME" filename="build/release/release.zip" renameto="KarantenyADostihy-win-${TAG_NAME/v/}".zip
+        TAG_NAME=$(./dist/get-tag-name.sh)
+        ./dist/upload-github-release-asset.sh github_api_token=${{ secrets.GITHUB_TOKEN }} tag="$TAG_NAME" filename="build/release/release.zip" renameto="KarantenyADostihy-win-${TAG_NAME/v/}".zip
 
   mingw:
     runs-on: windows-2019
@@ -70,7 +70,7 @@ jobs:
     - name: Build the application
       shell: bash
       run: |
-        TAG_NAME=$(./get-tag-name.sh)
+        TAG_NAME=$(./dist/get-tag-name.sh)
         export CMAKE_PREFIX_PATH="$Qt5_Dir/lib/cmake"
         export PATH="$Qt5_Dir/bin":"$PATH"
         mkdir build
@@ -90,11 +90,40 @@ jobs:
     - name: Build the application
       shell: bash
       run: |
-        TAG_NAME=$(./get-tag-name.sh)
+        TAG_NAME=$(./dist/get-tag-name.sh)
         mkdir build
         cd build
         cmake ..
         cmake --build . -- -j2
+
+  flatpak:
+    runs-on: ubuntu-18.04
+    if: github.event_name == 'release'
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Install Flatpak
+      run: |
+        sudo apt update
+        sudo apt install flatpak flatpak-builder
+    - name: Install Flatpak KDE SDK
+      run: |
+        sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+        sudo flatpak install --system -y flathub org.kde.Platform//5.12
+        sudo flatpak install --system -y flathub org.kde.Sdk//5.12
+    - name: Build Linux Flatpak package - KDE based
+      run: |
+        pushd dist/linux/flatpak
+        sudo flatpak-builder --repo=flatpak-repo --force-clean flatpak-build cz.rtinbriza.ma.Karanteny.json
+        flatpak build-bundle flatpak-repo cz.rtinbriza.ma.Karanteny.flatpak cz.rtinbriza.ma.Karanteny
+        mv cz.rtinbriza.ma.Karanteny.flatpak ../../..
+        popd
+    - name: Upload to GitHub
+      run: |
+        TAG_NAME=$(./dist/get-tag-name.sh)
+        ./dist/upload-github-release-asset.sh github_api_token=${{ secrets.GITHUB_TOKEN }} tag="$TAG_NAME" filename="cz.rtinbriza.ma.Karanteny.flatpak" renameto="cz.rtinbriza.ma.Karanteny-${TAG_NAME/v/}.flatpak"
+
 
   macos:
     runs-on: macOS-latest
@@ -109,7 +138,7 @@ jobs:
         brew install cmake
     - name: Build the application
       run: |
-        TAG_NAME=$(./get-tag-name.sh)
+        TAG_NAME=$(./dist/get-tag-name.sh)
         mkdir build
         cd build
         export CMAKE_PREFIX_PATH=/usr/local/opt/qt5/lib/cmake
