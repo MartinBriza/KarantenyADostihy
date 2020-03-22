@@ -74,6 +74,7 @@ public:
     QColor colorGet() const;
     Type typeGet() const;
     UIOpponent *ownerGet();
+    void ownerSet(UIOpponent *owner);
 signals:
     void feeChanged();
     void ownerChanged();
@@ -93,6 +94,7 @@ public:
     Board(QObject *parent = nullptr);
 
     QQmlListProperty<UIField> fields();
+    QList<UIField*> &fieldList();
     int fieldCount() const;
 
 private:
@@ -433,6 +435,7 @@ public slots:
     void setReady(bool val);
     void startGame();
     void move(int id, int position);
+    void buy(int id);
 
 private slots:
     void onReadyRead() {
@@ -448,6 +451,7 @@ private slots:
                 break;
             case Packet::ERROR:
                 qCritical() << "SERVER ERROR: " << p.error;
+                emit serverError(p.error);
                 break;
             case Packet::ROSTER:
                 qCritical() << "GOT ROSTER";
@@ -513,6 +517,20 @@ private slots:
                 emit stateChanged();
                 break;
             }
+            case Packet::OWNERSHIPS: {
+                for (auto ownership : p.ownerships) {
+                    for (auto field : m_board->fieldList()) {
+                        if (ownership.card == field->id) {
+                            for (auto opponent : m_opponents) {
+                                if (ownership.player == opponent->id) {
+                                    field->ownerSet(opponent);
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            }
             }
         }
     }
@@ -526,6 +544,7 @@ signals:
     void chatChanged();
     void opponentsChanged();
     void thisPlayerIdChanged();
+    void serverError(const QString &message);
 
 private:
     QTcpSocket *m_socket { nullptr };

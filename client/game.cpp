@@ -102,6 +102,13 @@ UIOpponent *UIField::ownerGet() {
     return m_owner;
 }
 
+void UIField::ownerSet(UIOpponent *owner) {
+    if (m_owner != owner) {
+        m_owner = owner;
+        emit ownerChanged();
+    }
+}
+
 Board::Board(QObject *parent)
     : QObject(parent)
 {
@@ -115,6 +122,10 @@ Board::Board(QObject *parent)
 
 QQmlListProperty<UIField> Board::fields() {
     return QQmlListProperty<UIField>(this, m_fields);
+}
+
+QList<UIField *> &Board::fieldList() {
+    return m_fields;
 }
 
 int Board::fieldCount() const {
@@ -236,6 +247,10 @@ void Client::startGame() {
 
 void Client::move(int id, int position) {
     m_dataStream << Packet(QList<Opponent>{{id, {}, {}, -1, position, {}, {}, {}}});
+}
+
+void Client::buy(int id) {
+    m_dataStream << Packet(QList<Ownership>{Ownership{m_thisPlayerId, id}});
 }
 
 UIRoster::UIRoster(Client *parent)

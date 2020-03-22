@@ -24,5 +24,9 @@ Window {
         anchors.fill: parent
     }
 
+    ErrorView {
+        anchors.centerIn: parent
+    }
+
     Component.onCompleted: console.warn(client.state)
 }

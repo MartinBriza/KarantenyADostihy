@@ -39,6 +39,8 @@ Dialog {
                 Layout.alignment: Qt.AlignHCenter
                 visible: model.type === FieldData.HORSE || model.type === FieldData.TRAINER || model.type === FieldData.TRANSPORT
                 text: "Koupit"
+                enabled: model.owner === null
+                onClicked: client.buy(model.id)
             }
             Button {
                 Layout.alignment: Qt.AlignHCenter

@@ -24,20 +24,25 @@ inline QList<QColor> colors {
     Qt::black,
 };
 
+inline QVector<Field> fields {
+    #include "../def/fields.def"
+};
 
 struct Game : public Match {
     Game(const Match& match)
-        : Match(match) {}
+        : Match(match) {
+        for (auto &i : fields) {
+            ownerships.insert(&i, 0);
+        }
+    }
     QList<ClientConnection*> clients;
     GameState state {{
         { {"AHOJ"}, 0 }
     }};
+    QMap<Field*, int> ownerships;
 };
 
 inline QSet<Game*> games {};
-inline QList<Field> fields {
-    #include "../def/fields.def"
-};
 
 class ClientConnection : public QObject {
     Q_OBJECT
@@ -72,8 +77,14 @@ private slots:
         }
     }
     void onReadyRead() {
+        if (!m_socket->isReadable())
+            return;
         Packet p;
         m_dataStream >> p;
+        if (m_dataStream.status() != QDataStream::Ok) {
+            qCritical() << "GOT GARBAGE:" << m_socket->readAll();
+            return;
+        }
         qCritical() << "Got packet type" << p.type;
         if (p.type == Packet::AHOJ) {
             m_state = AHOJ_RECEIVED;
@@ -105,6 +116,7 @@ private slots:
                 auto gameIt = games.insert(new Game(Match{lastGameID++, p.create.password, p.create.name, m_clientName, 0, p.create.capacity}));
                 auto game = *gameIt;
                 joinGame(game->id, p.create.password);
+                break;
             }
             case Packet::JOIN: {
                 if (p.join.id < 0) {
@@ -171,6 +183,38 @@ private slots:
                     for (auto client : game->clients) {
                         client->m_dataStream << Packet(game->state);
                     }
+                    updateOwnerships(game);
+                }
+                break;
+            }
+            case Packet::OWNERSHIPS: {
+                auto game = clientGame();
+                if (!game)
+                    return;
+                for (auto i : p.ownerships) {
+                    for (auto client : game->clients) {
+                        if (i.player == client->m_clientId) {
+                            for (auto card : game->ownerships.keys()) {
+                                if (i.card == card->id) {
+                                    if (game->ownerships[card] == 0) {
+                                        if (m_money < card->price) {
+                                            m_dataStream << Packet(Packet::ERROR, "Na tuhle kartu nemáš dost peněz");
+                                            break;
+                                        }
+                                        game->ownerships[card] = i.player;
+                                        updateOwnerships(game);
+                                        updateOpponents(game);
+                                    } else if (game->ownerships[card] == m_clientId) {
+                                        game->ownerships[card] = i.player;
+                                        updateOwnerships(game);
+                                    } else {
+                                        m_dataStream << Packet(Packet::ERROR, "Nemůžeš koupit nebo prodat kartu, kterou vlastní někdo jiný");
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 break;
             }
@@ -229,6 +273,16 @@ private:
             games.remove(game);
         }
     }
+    void updateOwnerships(Game *game) {
+        QList<Ownership> data;
+        for (auto i : game->ownerships.keys()) {
+            qCritical() << "will send Ownership:" << game->ownerships[i] << i->id;
+            data.append({game->ownerships[i], i->id});
+        }
+        for (auto i : game->clients) {
+            i->m_dataStream << Packet(data);
+        }
+    }
     void updateOpponents(Game *game) {
         // totally clean
         int position = 0;
@@ -260,7 +314,7 @@ private:
     QString m_clientName {};
     bool m_clientReady { false };
     int m_clientId { lastPlayerID++ };
-    int m_money { 30000 };
+    int m_money { 5000 };
     QColor m_clientColor { Qt::red };
     int m_position { 0 };
 };

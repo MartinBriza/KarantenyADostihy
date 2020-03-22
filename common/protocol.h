@@ -38,7 +38,7 @@ struct Effect {
     int secondaryAmount { 0 };
 };
 inline QDataStream &operator<<(QDataStream &str, const Effect &item) {
-    str << (const int&) item.target << (const int&) item.effect << item.amount << item.secondaryAmount;
+    str << (int&) item.target << (int) item.effect << item.amount << item.secondaryAmount;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Effect &item) {
@@ -68,7 +68,7 @@ struct Field {
     Type type { BASIC };
 };
 inline QDataStream &operator<<(QDataStream &str, const Field &item) {
-    str << item.id << item.name << item.effects << item.color << item.price << item.upgradePrice << (const int &) item.type;
+    str << item.id << item.name << item.effects << item.color << item.price << item.upgradePrice << (int) item.type;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Field &item) {
@@ -110,7 +110,7 @@ struct Match {
     int maximumPlayers { 8 };
 };
 inline QDataStream &operator<<(QDataStream &str, const Match &item) {
-    str << item.id << (item.password.isEmpty() ? QString() : QString("***")) << item.name << item.owner << item.players << item.maximumPlayers;
+    str << item.id << QString((item.password.isEmpty() ? QString("") : QString("***"))) << item.name << item.owner << item.players << item.maximumPlayers;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Match &item) {
@@ -245,6 +245,7 @@ struct Packet {
         CHAT,
         GAMESTATE,
         OWNERSHIPS,
+        _LAST_TYPE
     } type { NONE };
     union {
         QString error;
@@ -260,7 +261,8 @@ struct Packet {
         QList<Ownership> ownerships;
     };
     Packet() {}
-    Packet(Type type, const QString &text) : type(type) {
+    Packet(Type type, const QString &text) {
+        setType(type);
         switch (type) {
         case ERROR:
             error = text;
@@ -410,6 +412,11 @@ inline QDataStream &operator<<(QDataStream &str, const Packet &item) {
 inline QDataStream &operator>>(QDataStream &str, Packet &item) {
     int type;
     str >> type;
+    if (type >= Packet::_LAST_TYPE) {
+        str.setStatus(QDataStream::ReadCorruptData);
+        return str;
+    }
+    qCritical() << "Now I'm working with" << type;
     item.setType(Packet::Type(type));
     switch (type) {
     case Packet::NONE:

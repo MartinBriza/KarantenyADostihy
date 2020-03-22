@@ -9,5 +9,6 @@
         <file>Lobby.qml</file>
         <file>CardView.qml</file>
         <file>Chat.qml</file>
+        <file>ErrorView.qml</file>
     </qresource>
 </RCC>
