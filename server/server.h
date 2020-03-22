@@ -69,7 +69,6 @@ public:
         connect(m_socket, &QTcpSocket::stateChanged, this, &ClientConnection::onSocketStateChanged);
         m_dataStream << Packet{Ahoj{}};
         m_state = AHOJ_SENT;
-        qCritical() << "Sent ahoj, error:" << m_dataStream.status() << m_socket->errorString();
     }
     ~ClientConnection() {
 
@@ -94,7 +93,6 @@ private slots:
         if (p.type == Packet::AHOJ) {
             m_state = AHOJ_RECEIVED;
             m_clientName = p.ahoj.ahoj;
-            qCritical() << "Client is called" << m_clientName;
             Roster roster;
             for (auto i : games) {
                 roster.matches.append(*i);
@@ -143,7 +141,6 @@ private slots:
             case Packet::OPPONENTS: {
                 auto game = clientGame();
                 if (!game) {
-                    qCritical() << "NOUGEJM";
                     return;
                 }
                 bool changed = false;
@@ -180,7 +177,6 @@ private slots:
                                 changed = true;
                             }
                             if (c->m_clientReady != i.ready) {
-                                qCritical() << "Changing ready to" << i.ready;
                                 sendMessage(game, Chat{QString("<%1> is now %2 ready.").arg(m_clientName).arg(i.ready ? "" : "not")});
                                 c->m_clientReady = i.ready;
                                 changed = true;
@@ -188,7 +184,6 @@ private slots:
                         }
                     }
                 }
-                qCritical() << "Jako snaha byla";
                 if (changed)
                     updateOpponents(game);
                 break;
@@ -339,7 +334,6 @@ private:
     void updateOwnerships(Game *game) {
         QList<Ownership> data;
         for (auto i : game->ownerships.keys()) {
-            qCritical() << "will send Ownership:" << game->ownerships[i] << i->id;
             data.append({game->ownerships[i], i->id});
         }
         for (auto i : game->clients) {
