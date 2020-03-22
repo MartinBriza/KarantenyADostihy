@@ -439,7 +439,6 @@ inline QDataStream &operator>>(QDataStream &str, Packet &item) {
         str.setStatus(QDataStream::ReadCorruptData);
         return str;
     }
-    qCritical() << "Now I'm working with" << type;
     item.setType(Packet::Type(type));
     switch (type) {
     case Packet::NONE:

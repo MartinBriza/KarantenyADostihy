@@ -91,7 +91,6 @@ private slots:
             qCritical() << "GOT GARBAGE:" << m_socket->readAll();
             return;
         }
-        qCritical() << "Got packet type" << p.type;
         if (p.type == Packet::AHOJ) {
             m_state = AHOJ_RECEIVED;
             m_clientName = p.ahoj.ahoj;

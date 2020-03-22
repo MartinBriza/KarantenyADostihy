@@ -380,11 +380,12 @@ public:
         , m_roster(new UIRoster(this))
         , m_refreshTimer()
     {
-        m_refreshTimer.setInterval(1000);
+        m_refreshTimer.setInterval(5000);
         m_refreshTimer.setSingleShot(false);
         connect(&m_refreshTimer, &QTimer::timeout, this, &Client::refreshRoster);
         connect(m_socket, &QTcpSocket::readyRead, this, &Client::onReadyRead);
         connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Client::onError);
+        connect(m_socket, &QTcpSocket::stateChanged, this, &Client::onSocketStateChanged);
         QTimer::singleShot(0, [this]() {
             m_socket->connectToHost("46.36.35.81", 16543);
             m_refreshTimer.start();
@@ -441,15 +442,17 @@ public slots:
     void takeMoney(int amount);
 
 private slots:
+    void onSocketStateChanged() {
+        if (m_socket->state() == QAbstractSocket::ConnectedState) {
+            m_dataStream << Packet(Ahoj{m_name});
+        }
+    }
     void onReadyRead() {
         while(m_socket->bytesAvailable() > 0) {
-            qCritical() << "READY READ";
             Packet p;
             m_dataStream >> p;
-            qCritical() << "Packet type " << p.type;
             switch (p.type) {
             case Packet::AHOJ:
-                qCritical() << "Got ahoj, sending ahoj";
                 m_dataStream << Packet(Ahoj{m_name});
                 break;
             case Packet::ERROR:
@@ -457,11 +460,8 @@ private slots:
                 emit serverError(p.error);
                 break;
             case Packet::ROSTER:
-                qCritical() << "GOT ROSTER";
                 if (m_dataStream.status() == QDataStream::Ok)
                     m_roster->regenerate(p.roster);
-                else
-                    qCritical() << "SUMTIN WRONG: " << m_dataStream.status() << m_socket->errorString();
                 break;
             case Packet::ENTERED: {
                 if (p.entered.id >= 0) {
