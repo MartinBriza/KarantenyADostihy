@@ -107,7 +107,6 @@ Item {
                                         enabled: opponentDelegate.player.you
                                         implicitWidth: implicitHeight
                                         onClicked: client.move(opponentDelegate.player.id, opponentDelegate.player.position + index + 1)
-                                        Component.onCompleted: console.log("My index is " + index)
                                         Text {
                                             font.pixelSize: parent.height
                                             opacity: parent.enabled ? 1.0 : 0.3

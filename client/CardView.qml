@@ -11,7 +11,6 @@ Dialog {
         model = obj
         visible = true
 
-        console.warn(model)
         if (model.type === FieldData.HORSE) {
             horseFees.model = model.effects
         }
@@ -36,7 +35,7 @@ Dialog {
         Rectangle {
             Layout.fillWidth: true
             height: 8
-            color: model.color
+            color: model ? model.color : "white"
         }
 
         Text {
@@ -47,10 +46,10 @@ Dialog {
             font.pixelSize: 32
         }
         Text {
-            visible: model.type === FieldData.HORSE || model.type === FieldData.TRAINER || model.type === FieldData.TRANSPORT
+            visible: model && (model.type === FieldData.HORSE || model.type === FieldData.TRAINER || model.type === FieldData.TRANSPORT)
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
-            text: "<b>Vlastník: </b> " + (model.owner ? model.owner.name : "<i>žádný</i>")
+            text: "<b>Vlastník: </b> " + (model && model.owner ? model.owner.name : "<i>žádný</i>")
             textFormat: Text.RichText
         }
         RowLayout {
@@ -58,19 +57,19 @@ Dialog {
             Layout.alignment: Qt.AlignHCenter
             Button {
                 Layout.alignment: Qt.AlignHCenter
-                visible: model.type === FieldData.HORSE || model.type === FieldData.TRAINER || model.type === FieldData.TRANSPORT
+                visible: model && (model.type === FieldData.HORSE || model.type === FieldData.TRAINER || model.type === FieldData.TRANSPORT)
                 text: "Koupit"
-                enabled: model.owner === null
+                enabled: model && model.owner === null
                 onClicked: client.buy(model.id)
             }
             Button {
                 Layout.alignment: Qt.AlignHCenter
-                visible: model.type === FieldData.HORSE
+                visible: model && model.type === FieldData.HORSE
                 text: "Obsadit dostih"
             }
             Button {
                 Layout.alignment: Qt.AlignHCenter
-                visible: model.type === FieldData.DECK
+                visible: model && model.type === FieldData.DECK
                 text: "Táhnout"
                 onClicked: {
                     // ugh
@@ -83,13 +82,13 @@ Dialog {
         }
 
         RowLayout {
-            visible: model.type === FieldData.HORSE || model.type === FieldData.TRAINER || model.type === FieldData.TRANSPORT
+            visible: model && (model.type === FieldData.HORSE || model.type === FieldData.TRAINER || model.type === FieldData.TRANSPORT)
             Text { text: "Pořizovací cena: " }
-            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model.price }
+            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model ? model.price : "" }
         }
         Repeater {
             id: horseFees
-            visible: model.type === FieldData.HORSE
+            visible: model && model.type === FieldData.HORSE
             model: null
             ColumnLayout {
                 Layout.fillWidth: true
@@ -111,14 +110,14 @@ Dialog {
         }
 
         Text {
-            visible: model.type === FieldData.TRAINER
+            visible: model && model.type === FieldData.TRAINER
             text: "Majitel licencí vybírá tyto poplatky:";
             font.bold: true
         }
 
         Repeater {
             id: trainerFees
-            visible: model.type === FieldData.TRAINER
+            visible: model && model.type === FieldData.TRAINER
             model: null
             ColumnLayout {
                 Layout.fillWidth: true
@@ -133,14 +132,14 @@ Dialog {
         }
 
         Text {
-            visible: model.type === FieldData.TRANSPORT
+            visible: model && model.type === FieldData.TRANSPORT
             text: "Použití přepravy:";
             font.bold: true
         }
 
         Repeater {
             id: transportFees
-            visible: model.type === FieldData.TRANSPORT
+            visible: model && model.type === FieldData.TRANSPORT
             model: null
             ColumnLayout {
                 Layout.fillWidth: true
@@ -156,25 +155,25 @@ Dialog {
         }
 
         Text {
-            visible: model.type === FieldData.HORSE
+            visible: model && model.type === FieldData.HORSE
             text: "Náklady na přípravu";
             font.bold: true
         }
         RowLayout {
-            visible: model.type === FieldData.HORSE
+            visible: model && model.type === FieldData.HORSE
             Text { text: "na nový dostih: " }
-            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model.upgradePrice }
+            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model ? model.upgradePrice : "" }
         }
         RowLayout {
-            visible: model.type === FieldData.HORSE
+            visible: model && model.type === FieldData.HORSE
             Text { text: "na hlavní dostih: " }
-            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model.upgradePrice }
+            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model ? model.upgradePrice : "" }
         }
 
         Rectangle {
             Layout.fillWidth: true
             height: 8
-            color: model.color
+            color: model ? model.color : "white"
         }
     }
 }

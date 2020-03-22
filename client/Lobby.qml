@@ -13,7 +13,7 @@ Item {
         Text {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
-            text: client.lobby.name
+            text: client.lobby ? client.lobby.name : ""
             font.pixelSize: 32
         }
 
