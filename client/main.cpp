@@ -12,9 +12,7 @@ int main(int argc, char *argv[]) {
 
     qRegisterMetaType<UIField::Type>();
 
-    qmlRegisterUncreatableType<Game>("monopoly", 1, 0, "GameData", "Created by core");
     qmlRegisterUncreatableType<Board>("monopoly", 1, 0, "BoardData", "Created by core");
-    qmlRegisterUncreatableType<Player>("monopoly", 1, 0, "PlayerData", "Created by core");
     qmlRegisterUncreatableType<UIEffect>("monopoly", 1, 0, "EffectData", "Created by core");
     qmlRegisterUncreatableType<UIField>("monopoly", 1, 0, "FieldData", "Created by core");
     qmlRegisterUncreatableType<Client>("monopoly", 1, 0, "ClientData", "Created by core");

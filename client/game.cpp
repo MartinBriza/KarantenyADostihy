@@ -1,44 +1,5 @@
 #include "game.h"
 
-Player::Player(Game *parent, const QString &name, int money, const QColor &color)
-    : QObject(parent)
-    , m_name(name)
-    , m_money(money)
-    , m_color(color)
-{
-
-}
-
-Game *Player::game() {
-    return qobject_cast<Game*>(parent());
-}
-
-Board *Player::board() {
-    return game()->board();
-}
-
-int Player::position() const {
-    return m_position;
-}
-
-QString Player::name() const {
-    return m_name;
-}
-
-int Player::money() const {
-    return m_money;
-}
-
-QColor Player::color() const {
-    return m_color;
-}
-
-void Player::move(int by) {
-    m_position += by;
-    m_position %= board()->fieldCount();
-    emit positionChanged();
-}
-
 UIEffect::UIEffect(QObject *parent, const Effect &effect)
     : QObject(parent)
     , Effect(effect)
@@ -129,21 +90,6 @@ QList<UIField *> &Board::fieldList() {
 
 int Board::fieldCount() const {
     return m_fields.count();
-}
-
-Game::Game(QObject *parent)
-    : QObject(parent)
-{
-    m_players.append(new Player(this, "Martin", 30000, Qt::blue));
-    m_players.append(new Player(this, "Vendula", 30000, Qt::red));
-}
-
-Board *Game::board() {
-    return m_board;
-}
-
-QQmlListProperty<Player> Game::players() {
-    return QQmlListProperty<Player>(this, m_players);
 }
 
 UIMatch::UIMatch(UIRoster *parent, const QString &name, const QString &owner)

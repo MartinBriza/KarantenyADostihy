@@ -106,65 +106,6 @@ private:
     };
 };
 
-class Player : public QObject {
-    Q_OBJECT
-    Q_PROPERTY(int position READ position NOTIFY positionChanged)
-    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
-    Q_PROPERTY(QColor color READ color NOTIFY colorChanged)
-    Q_PROPERTY(int money READ money NOTIFY moneyChanged)
-public:
-    Player(Game *parent = nullptr, const QString &name = {}, int money = 30000, const QColor &color = Qt::red);
-
-    Game *game();
-    Board *board();
-
-    int position() const;
-    QString name() const;
-    int money() const;
-    QColor color() const;
-
-public slots:
-    void move(int by);
-
-signals:
-    void positionChanged();
-    void nameChanged();
-    void moneyChanged();
-    void colorChanged();
-
-private:
-    int m_position { 0 };
-    QString m_name;
-    int m_money;
-    QColor m_color;
-};
-
-class Game : public QObject {
-    Q_OBJECT
-    Q_PROPERTY(Board *board READ board CONSTANT)
-    Q_PROPERTY(QQmlListProperty<Player> players READ players NOTIFY playersChanged)
-public:
-    Game(QObject *parent = nullptr);
-
-    Board *board();
-    QQmlListProperty<Player> players();
-
-signals:
-    void playersChanged();
-
-private:
-    Board *m_board { new Board(this) };
-    QList<Player*> m_players;
-
-    QList<UICard*> m_financeCards {
-        #include "../def/finance.def"
-    };
-
-    QList<UICard*> m_chanceCards {
-        #include "../def/chance.def"
-    };
-};
-
 class UIMatch : public QObject, protected Match {
     Q_OBJECT
     Q_PROPERTY(int id READ idGet CONSTANT)
