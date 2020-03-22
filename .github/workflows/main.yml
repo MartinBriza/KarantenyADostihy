@@ -136,7 +136,7 @@ jobs:
         brew install qt
         brew install openssl
         brew install cmake
-        node install --global create-dmg
+        npm install --global create-dmg
     - name: Build the application
       run: |
         TAG_NAME=$(./dist/get-tag-name.sh)
