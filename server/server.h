@@ -27,6 +27,12 @@ inline QList<QColor> colors {
 inline QVector<Field> fields {
     #include "../def/fields.def"
 };
+inline QVector<Card> chanceCards {
+    #include "../def/chance.def"
+};
+inline QVector<Card> financeCards {
+    #include "../def/finance.def"
+};
 
 struct Game : public Match {
     Game(const Match& match)
@@ -156,7 +162,16 @@ private slots:
                                 changed = true;
                             }
                             if (i.money >= 0) {
-                                sendMessage(game, Chat{QString("<%1> changed the money of <%2> to \"%3\" from \"%4\".").arg(m_clientName).arg(c->m_clientName).arg(i.money).arg(c->m_money)});
+                                if (m_clientId == c->m_clientId) {
+                                    int diff = i.money - c->m_money;
+                                    if (diff > 0)
+                                        sendMessage(game, Chat{QString("<%1> took %2 from the bank").arg(m_clientName).arg(diff)});
+                                    else
+                                        sendMessage(game, Chat{QString("<%1> gave %2 to the bank").arg(m_clientName).arg(diff)});
+                                }
+                                else {
+                                    sendMessage(game, Chat{QString("<%1> changed the money of <%2> to \"%3\" from \"%4\".").arg(m_clientName).arg(c->m_clientName).arg(i.money).arg(c->m_money)});
+                                }
                                 c->m_money = i.money;
                                 changed = true;
                             }
@@ -224,6 +239,38 @@ private slots:
                             }
                         }
                     }
+                }
+                break;
+            }
+            case Packet::CARD: {
+                auto game = clientGame();
+                if (p.card.name == "chance") {
+                    auto &c = chanceCards[qrand() % chanceCards.count()];
+                    sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Náhoda - \"%2\"").arg(m_clientName).arg(c.name)});;
+                    m_dataStream << Packet(c);
+                }
+                else if (p.card.name == "finance") {
+                    auto &c = financeCards[qrand() % financeCards.count()];
+                    sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Finance - \"%2\"").arg(m_clientName).arg(c.name)});;
+                    m_dataStream << Packet(c);
+                }
+                else if (m_position >= 0 && m_position < fields.count()) {
+                    if (fields[m_position].effects.count() > 0 && fields[m_position].effects.first().action == Effect::DRAW_CHANCE) {
+                        auto &c = chanceCards[qrand() % chanceCards.count()];
+                        sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Náhoda - \"%2\"").arg(m_clientName).arg(c.name)});;
+                        m_dataStream << Packet(c);
+                    }
+                    else if (fields[m_position].effects.count() > 0 && fields[m_position].effects.first().action == Effect::DRAW_FINANCE) {
+                        auto &c = financeCards[qrand() % financeCards.count()];
+                        sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Finance - \"%2\"").arg(m_clientName).arg(c.name)});;
+                        m_dataStream << Packet(c);
+                    }
+                    else {
+                        m_dataStream << Packet(Packet::ERROR, "Hele, nevim, co tam nacvičuješ, ale o karty se takhle neříká");
+                    }
+                }
+                else {
+                    m_dataStream << Packet(Packet::ERROR, "Hele, nevim, co tam nacvičuješ, ale o karty se takhle neříká");
                 }
                 break;
             }

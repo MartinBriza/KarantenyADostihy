@@ -534,6 +534,10 @@ private slots:
                 }
                 break;
             }
+            case Packet::CARD: {
+                emit displayCard(p.card.name);
+                break;
+            }
             }
         }
     }
@@ -548,6 +552,7 @@ signals:
     void opponentsChanged();
     void thisPlayerIdChanged();
     void serverError(const QString &message);
+    void displayCard(const QString &message);
 
 private:
     QTcpSocket *m_socket { nullptr };

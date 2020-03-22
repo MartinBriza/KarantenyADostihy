@@ -29,6 +29,30 @@ Item {
         }
         ColumnLayout {
             anchors.fill: parent
+            RowLayout {
+                Text {
+                    text: "Bank"
+                }
+                SpinBox {
+                    id: bankSpinBox
+                    from: 0
+                    to: 1000000
+                    stepSize: 20
+                    editable: true
+                }
+                Button {
+                    text: "Give"
+                    onClicked: {
+                        bankSpinBox.value = 0
+                    }
+                }
+                Button {
+                    text: "Take"
+                    onClicked: {
+                        bankSpinBox.value = 0
+                    }
+                }
+            }
             Flow {
                 Layout.fillWidth: true
                 spacing: 6

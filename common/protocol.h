@@ -33,16 +33,16 @@ struct Effect {
         MOVE_TO_PARKING_LOT
     };
     Target target { NO_TARGET };
-    Action effect { NO_ACTION };
+    Action action { NO_ACTION };
     int amount { 0 };
     int secondaryAmount { 0 };
 };
 inline QDataStream &operator<<(QDataStream &str, const Effect &item) {
-    str << (int&) item.target << (int) item.effect << item.amount << item.secondaryAmount;
+    str << (int&) item.target << (int) item.action << item.amount << item.secondaryAmount;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Effect &item) {
-    str >> (int&) item.target >> (int&) item.effect >> item.amount >> item.secondaryAmount;
+    str >> (int&) item.target >> (int&) item.action >> item.amount >> item.secondaryAmount;
     return str;
 }
 
@@ -257,6 +257,7 @@ struct Packet {
         CHAT,
         GAMESTATE,
         OWNERSHIPS,
+        CARD,
         _LAST_TYPE
     } type { NONE };
     union {
@@ -270,6 +271,7 @@ struct Packet {
         QList<Opponent> opponents;
         Chat chat;
         GameState gameState;
+        Card card;
         QList<Ownership> ownerships;
     };
     Packet() {}
@@ -291,6 +293,7 @@ struct Packet {
     Packet(const QList<Opponent> &d) : type(OPPONENTS), opponents(d) { }
     Packet(const GameState &d) : type(GAMESTATE), gameState(d) { }
     Packet(const QList<Ownership> &d) : type(OWNERSHIPS), ownerships(d) { }
+    Packet(const Card &d) : type(CARD), card(d) { }
     void setType(Type type) {
         clear();
         this->type = type;
@@ -330,6 +333,8 @@ struct Packet {
         case OWNERSHIPS:
             new (&ownerships) QList<Ownership>();
             break;
+        case CARD:
+            new (&card) Card();
         }
     }
     void clear() {
@@ -368,6 +373,9 @@ struct Packet {
             break;
         case OWNERSHIPS:
             ownerships.~QList<Ownership>();
+            break;
+        case CARD:
+            card.~Card();
             break;
         }
         type = NONE;
@@ -415,6 +423,9 @@ inline QDataStream &operator<<(QDataStream &str, const Packet &item) {
         break;
     case Packet::OWNERSHIPS:
         str << item.ownerships;
+        break;
+    case Packet::CARD:
+        str << item.card;
         break;
     default:
         str.setStatus(QDataStream::WriteFailed);
@@ -475,6 +486,10 @@ inline QDataStream &operator>>(QDataStream &str, Packet &item) {
     }
     case Packet::OWNERSHIPS: {
         str >> item.ownerships;
+        break;
+    }
+    case Packet::CARD: {
+        str >> item.card;
         break;
     }
     default: {
