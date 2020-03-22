@@ -40,4 +40,4 @@ target_link_libraries(Client
 
 qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 
-install(TARGETS Client DESTINATION BINARY_DIR)
+install(TARGETS Client DESTINATION bin)
