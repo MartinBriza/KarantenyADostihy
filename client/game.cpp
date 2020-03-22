@@ -66,12 +66,11 @@ UIField::UIField(QObject *parent, const Field &field)
     : QObject(parent)
     , Field(field)
 {
-    this->effects.clear();
     for (auto i : field.effects) {
         this->m_effects.append(new UIEffect(this, i));
     }
     // non-ui effects are not necessary
-    effects.clear();
+    //effects.clear();
 }
 
 int UIField::idGet() const {

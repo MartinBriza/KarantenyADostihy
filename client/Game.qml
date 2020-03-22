@@ -78,6 +78,7 @@ Item {
                                 Repeater {
                                     model: ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"]
                                     Button {
+                                        enabled: opponentDelegate.player.you
                                         implicitWidth: implicitHeight
                                         onClicked: client.move(opponentDelegate.player.id, opponentDelegate.player.position + index + 1)
                                         Component.onCompleted: console.log("My index is " + index)
@@ -107,7 +108,7 @@ Item {
                                         opacity: modelData.owns ? 1.0 : 0.4
                                         border {
                                             width: 1
-                                            color: modelData.owns ? "gray" : "light gray"
+                                            color: modelData.owns ? "black" : "light gray"
                                         }
                                     }
                                 }

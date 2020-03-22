@@ -54,6 +54,7 @@ class UIField : public QObject, public Field {
     Q_PROPERTY(Type type READ typeGet CONSTANT)
     Q_PROPERTY(UIOpponent* owner READ ownerGet NOTIFY ownerChanged)
     //Q_PROPERTY(int fee READ feeGet NOTIFY feeChanged)
+    Q_PROPERTY(QQmlListProperty<UIEffect> effects READ effectsGet CONSTANT)
 public:
     UIField(QObject *parent = nullptr, const Field &field = {});
     // This has to be the same as Field::Type because I couldn't figure out how to pass it to QML
@@ -75,11 +76,14 @@ public:
     Type typeGet() const;
     UIOpponent *ownerGet();
     void ownerSet(UIOpponent *owner);
+    QQmlListProperty<UIEffect> effectsGet() {
+        return QQmlListProperty<UIEffect>(this, m_effects);
+    }
 signals:
     void feeChanged();
     void ownerChanged();
 private:
-    QList<Effect*> m_effects;
+    QList<UIEffect*> m_effects;
     int m_upgrade;
     QPointer<UIOpponent> m_owner { nullptr };
 };

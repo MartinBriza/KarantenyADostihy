@@ -10,8 +10,29 @@ Dialog {
     function show(obj) {
         model = obj
         visible = true
+
+        console.warn(model)
+        if (model.type === FieldData.HORSE) {
+            horseFees.model = model.effects
+        }
+        else {
+            horseFees.model = null
+        }
+        if (model.type === FieldData.TRAINER) {
+            trainerFees.model = model.effects
+        }
+        else {
+            trainerFees.model = null
+        }
+        if (model.type === FieldData.TRANSPORT) {
+            transportFees.model = model.effects
+        }
+        else {
+            transportFees.model = null
+        }
     }
     ColumnLayout {
+        visible: model
         Rectangle {
             Layout.fillWidth: true
             height: 8
@@ -59,42 +80,74 @@ Dialog {
             Text { text: "Pořizovací cena: " }
             Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model.price }
         }
-        RowLayout {
+        Repeater {
+            id: horseFees
             visible: model.type === FieldData.HORSE
-            Text { text: "Prohlídka stáje: " }
-            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model.price }
+            model: null
+            ColumnLayout {
+                Layout.fillWidth: true
+                Text {
+                    visible: index == 1
+                    text: "Zisk";
+                    font.bold: true
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text {
+                        text: index === 0 ? "Prohlídka stáje: " :
+                              index === 5 ? "Zisk z hlavního dostihu: " :
+                                            "Zisk z " + index + ". dostihu: "
+                    }
+                    Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: modelData.amount }
+                }
+            }
         }
 
         Text {
-            visible: model.type === FieldData.HORSE
-            text: "Zisk";
+            visible: model.type === FieldData.TRAINER
+            text: "Majitel licencí vybírá tyto poplatky:";
             font.bold: true
         }
-        RowLayout {
-            visible: model.type === FieldData.HORSE
-            Text { text: "z 1 dostihu: " }
-            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model.price }
+
+        Repeater {
+            id: trainerFees
+            visible: model.type === FieldData.TRAINER
+            model: null
+            ColumnLayout {
+                Layout.fillWidth: true
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text {
+                        text: (index + 1) + ". licence"
+                    }
+                    Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: modelData.amount }
+                }
+            }
         }
-        RowLayout {
-            visible: model.type === FieldData.HORSE
-            Text { text: "ze 2 dostihů: " }
-            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model.price }
+
+        Text {
+            visible: model.type === FieldData.TRANSPORT
+            text: "Použití přepravy:";
+            font.bold: true
         }
-        RowLayout {
-            visible: model.type === FieldData.HORSE
-            Text { text: "ze 3 dostihů: " }
-            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model.price }
+
+        Repeater {
+            id: transportFees
+            visible: model.type === FieldData.TRANSPORT
+            model: null
+            ColumnLayout {
+                Layout.fillWidth: true
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text {
+                        text: index === 0 ? "Při vlastnění pouze karty Přeprava nebo Stáje" :
+                                "Při vlastnění obou karet Přeprava i Stáje"
+                    }
+                    Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: modelData.amount + " x hozená hodnota" }
+                }
+            }
         }
-        RowLayout {
-            visible: model.type === FieldData.HORSE
-            Text { text: "ze 4 dostihů: " }
-            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model.price }
-        }
-        RowLayout {
-            visible: model.type === FieldData.HORSE
-            Text { text: "z hlavního dostihu: " }
-            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; text: model.price }
-        }
+
         Text {
             visible: model.type === FieldData.HORSE
             text: "Náklady na přípravu";

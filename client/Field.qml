@@ -45,6 +45,8 @@ Rectangle {
         id: mouse
         anchors.fill: parent
         hoverEnabled: true
-        onClicked: cardView.show(modelData)
+        onClicked: {
+            cardView.show(modelData)
+        }
     }
 }
