@@ -28,6 +28,7 @@ Item {
                     Text {
                         Layout.fillWidth: true
                         text: message
+                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                         font.bold: urgency > 0
                         color: urgency > 1 ? "red" : urgency > 0 ? "black" : "gray"
                     }

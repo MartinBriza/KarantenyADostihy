@@ -210,6 +210,24 @@ void Client::drawCard(int type) {
     }
 }
 
+void Client::giveMoney(int amount) {
+    int currentMoney = 0;
+    for (auto i : m_opponents) {
+        if (i->you)
+            currentMoney = i->money;
+    }
+    m_dataStream << Packet(QList<Opponent>{{m_thisPlayerId, {}, {}, currentMoney - amount, -1, {}, {}, {}}});
+}
+
+void Client::takeMoney(int amount) {
+    int currentMoney = 0;
+    for (auto i : m_opponents) {
+        if (i->you)
+            currentMoney = i->money;
+    }
+    m_dataStream << Packet(QList<Opponent>{{m_thisPlayerId, {}, {}, currentMoney + amount, -1, {}, {}, {}}});
+}
+
 UIRoster::UIRoster(Client *parent)
     : QObject(parent)
 {

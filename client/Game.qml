@@ -43,12 +43,14 @@ Item {
                 Button {
                     text: "Give"
                     onClicked: {
+                        client.giveMoney(bankSpinBox.value)
                         bankSpinBox.value = 0
                     }
                 }
                 Button {
                     text: "Take"
                     onClicked: {
+                        client.takeMoney(bankSpinBox.value)
                         bankSpinBox.value = 0
                     }
                 }

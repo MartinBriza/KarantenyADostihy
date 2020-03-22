@@ -224,7 +224,7 @@ private slots:
                                         }
                                         m_money -= card->price;
                                         game->ownerships[card] = i.player;
-                                        sendMessage(game, Chat{QString("<%1> bought %2 for.").arg(m_clientName).arg(card->name).arg(card->price)});
+                                        sendMessage(game, Chat{QString("<%1> bought %2 for %3.").arg(m_clientName).arg(card->name).arg(card->price)});
                                         updateOwnerships(game);
                                         updateOpponents(game);
                                     } else if (game->ownerships[card] == m_clientId) {
