@@ -39,3 +39,5 @@ target_link_libraries(Client
   PRIVATE Qt5::Core Qt5::Quick Qt5::Network)
 
 qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+
+install(TARGETS Client DESTINATION BINARY_DIR)
