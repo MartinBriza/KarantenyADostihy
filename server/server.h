@@ -304,7 +304,7 @@ private:
         // totally clean
         int position = 0;
         for (auto client : game->clients) {
-            client->m_clientColor = colors[position / 8];
+            client->m_clientColor = colors[position % 8];
             position++;
         }
         for (auto client : game->clients) {
