@@ -156,4 +156,4 @@ jobs:
       if: github.event_name == 'create'
       run: |
         TAG_NAME=$(./dist/get-tag-name.sh)
-        ./dist/upload-github-release-asset.sh github_api_token=${{ secrets.GITHUB_TOKEN }} tag="$TAG_NAME" filename="cz.rtinbriza.ma.Karanteny.flatpak" renameto="cz.rtinbriza.ma.Karanteny-${TAG_NAME/v/}.flatpak"
+        ./dist/upload-github-release-asset.sh github_api_token=${{ secrets.GITHUB_TOKEN }} tag="$TAG_NAME" filename="KarantenyADostihy-macos-${TAG_NAME/v/}.dmg"
