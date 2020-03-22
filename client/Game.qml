@@ -31,42 +31,85 @@ Item {
             anchors.fill: parent
             Flow {
                 Layout.fillWidth: true
+                spacing: 6
                 Repeater {
                     model: client.opponents
                     Rectangle {
-                        width: opponentLayout.width
-                        height: opponentLayout.height
+                        id: opponentDelegate
+                        property variant player: modelData
+                        width: opponentLayout.width + 6
+                        height: opponentLayout.height + 6
                         border.width: 1
                         border.color: "gray"
                         ColumnLayout {
+                            x: 3
+                            y: 3
                             id: opponentLayout
                             RowLayout {
-                                Rectangle {
-                                    width: 10
-                                    height: width
-                                    radius: width / 2
-                                    color: modelData.color
-                                    border.color: "black"
-                                    border.width: 1
+                                ColumnLayout {
+                                    RowLayout {
+                                        Rectangle {
+                                            width: 10
+                                            height: width
+                                            radius: width / 2
+                                            color: modelData.color
+                                            border.color: "black"
+                                            border.width: 1
+                                        }
+
+                                        Text {
+                                            text: modelData.name
+                                            font.bold: true
+                                        }
+                                    }
+                                    Text {
+                                        text: "Money: " + modelData.money
+                                    }
+                                }
+                                Item {
+                                    Layout.fillWidth: true
                                 }
 
-                                Text {
-                                    text: modelData.name
-                                    font.bold: true
+                                Button {
+                                    text: "Detaily"
                                 }
-                            }
-                            Text {
-                                text: "Money: " + modelData.money
                             }
                             RowLayout {
-                                SpinBox {
-                                    id: moveBy
-                                    from: 1
-                                    to: 6
+                                Repeater {
+                                    model: ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"]
+                                    Button {
+                                        implicitWidth: implicitHeight
+                                        onClicked: client.move(opponentDelegate.player.id, opponentDelegate.player.position + index + 1)
+                                        Component.onCompleted: console.log("My index is " + index)
+                                        Text {
+                                            font.pixelSize: parent.height
+                                            text: modelData
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            anchors.bottom: parent.bottom
+                                            anchors.bottomMargin: - parent.height / 16
+                                        }
+                                    }
                                 }
-                                Button {
-                                    onClicked: client.move(modelData.id, modelData.position + moveBy.value)
-                                    text: "Move"
+                            }
+                            Item {
+                                id: ownershipLayout
+                                property variant player: modelData
+                                Layout.fillWidth: true
+                                height: 10
+                                width: 10
+                                Repeater {
+                                    model: modelData.owns
+                                    Rectangle {
+                                        height: 10
+                                        width: (opponentDelegate.width - 6) / ownershipLayout.player.ownsCount
+                                        x: index * width
+                                        color: modelData.color
+                                        opacity: modelData.owns ? 1.0 : 0.4
+                                        border {
+                                            width: 1
+                                            color: modelData.owns ? "gray" : "light gray"
+                                        }
+                                    }
                                 }
                             }
                         }

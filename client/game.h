@@ -273,6 +273,38 @@ public:
     }
 };
 
+class UIOwnership : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(int id READ idGet CONSTANT)
+    Q_PROPERTY(QColor color READ colorGet CONSTANT)
+    Q_PROPERTY(bool owns READ ownsGet NOTIFY ownsChanged)
+public:
+    UIOwnership(UIOpponent *parent = nullptr, int id = 0, QColor color = Qt::white, bool owns = false);
+
+    int idGet() {
+        return m_id;
+    }
+    QColor colorGet() {
+        return m_color;
+    }
+    bool ownsGet() {
+        return m_owns;
+    }
+    void ownsSet(bool val) {
+        if (m_owns != val) {
+            m_owns = val;
+            emit ownsChanged();
+        }
+    }
+
+signals:
+    void ownsChanged();
+private:
+    int m_id { 0 };
+    QColor m_color {};
+    bool m_owns { false };
+};
+
 class UIOpponent : public QObject, public Opponent {
     Q_OBJECT
     Q_PROPERTY(int id READ idGet CONSTANT)
@@ -283,13 +315,13 @@ class UIOpponent : public QObject, public Opponent {
     Q_PROPERTY(bool leader READ leaderGet NOTIFY leaderChanged)
     Q_PROPERTY(bool ready READ readyGet NOTIFY readyChanged)
     Q_PROPERTY(bool you READ youGet NOTIFY youChanged)
+    Q_PROPERTY(QQmlListProperty<UIOwnership> owns READ ownsGet CONSTANT)
+    Q_PROPERTY(int ownsCount READ ownsCountGet CONSTANT)
 public:
-    UIOpponent(QObject *parent, const Opponent &data)
-        : QObject(parent)
-        , Opponent(data)
-    {
+    UIOpponent(Client *parent, const Opponent &data);
 
-    }
+    Client *client();
+
     void update(const Opponent &data) {
         if (name != data.name) {
             name = data.name;
@@ -344,6 +376,27 @@ public:
     bool youGet() const {
         return you;
     }
+    QQmlListProperty<UIOwnership> ownsGet() {
+        return QQmlListProperty<UIOwnership>(this, m_owns);
+    }
+    int ownsCountGet() {
+        return m_owns.count();
+    }
+public slots:
+    void updateOwnerships(const QList<Ownership> &list) {
+        for (auto i : m_owns) {
+            i->ownsSet(false);
+        }
+        for (auto i : list) {
+            if (i.player == idGet()) {
+                for (auto o : m_owns) {
+                    if (o->idGet() == i.card) {
+                        o->ownsSet(true);
+                    }
+                }
+            }
+        }
+    }
 signals:
     void nameChanged();
     void colorChanged();
@@ -352,6 +405,8 @@ signals:
     void leaderChanged();
     void readyChanged();
     void youChanged();
+private:
+    QList<UIOwnership*> m_owns { };
 };
 
 class Client : public QObject {
@@ -528,6 +583,9 @@ private slots:
                             }
                         }
                     }
+                }
+                for (auto opponent : m_opponents) {
+                    opponent->updateOwnerships(p.ownerships);
                 }
                 break;
             }

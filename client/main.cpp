@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
     qmlRegisterUncreatableType<UILobby>("monopoly", 1, 0, "LobbyData", "Created by core");
     qmlRegisterUncreatableType<UIChat>("monopoly", 1, 0, "ChatData", "Created by core");
     qmlRegisterUncreatableType<UIOpponent>("monopoly", 1, 0, "OpponentData", "Created by core");
+    qmlRegisterUncreatableType<UIOwnership>("monopoly", 1, 0, "OwnershipData", "Created by core");
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("client", new Client());

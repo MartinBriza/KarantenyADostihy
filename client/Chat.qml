@@ -4,6 +4,7 @@ import QtQuick.Controls 2.12
 
 Item {
     Rectangle {
+        clip: true
         anchors.fill: parent
         anchors.margins: 3
         border.color: "gray"

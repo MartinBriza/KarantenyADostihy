@@ -285,3 +285,36 @@ void UIRoster::regenerate(const Roster &data) {
     }
     emit matchesChanged();
 }
+
+UIOwnership::UIOwnership(UIOpponent *parent, int id, QColor color, bool owns)
+    : QObject(parent)
+    , m_id(id)
+    , m_color(color)
+    , m_owns(owns)
+{
+}
+
+UIOpponent::UIOpponent(Client *parent, const Opponent &data)
+    : QObject(parent)
+    , Opponent(data)
+{
+    for (auto &i : client()->boardGet()->fieldList()) {
+        if (i->typeGet() == UIField::TRAINER) {
+            m_owns.append(new UIOwnership(this, i->id, i->colorGet(), false));
+        }
+    }
+    for (auto &i : client()->boardGet()->fieldList()) {
+        if (i->typeGet() == UIField::HORSE) {
+            m_owns.append(new UIOwnership(this, i->id, i->colorGet(), false));
+        }
+    }
+    for (auto &i : client()->boardGet()->fieldList()) {
+        if (i->typeGet() == UIField::TRANSPORT) {
+            m_owns.append(new UIOwnership(this, i->id, i->colorGet(), false));
+        }
+    }
+}
+
+Client *UIOpponent::client() {
+    return qobject_cast<Client*>(parent());
+}
