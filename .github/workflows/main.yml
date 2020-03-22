@@ -146,9 +146,6 @@ jobs:
         export OPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1/
         cmake ..
         make -j2
-    - name: Install the application
-      run: |
-        make install
     - name: Create the dmg
       run: |
         cd build
