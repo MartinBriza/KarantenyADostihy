@@ -17,96 +17,86 @@ class Board;
 class Game;
 class UIRoster;
 class Client;
+class UIOpponent;
 
-class Effect : public QObject {
+inline int lastCardID { 1 };
+
+class UIEffect : public QObject, public Effect {
     Q_OBJECT
-    Q_PROPERTY(int amount READ amount CONSTANT)
-    Q_PROPERTY(int secondaryAmount READ secondaryAmount CONSTANT)
+    Q_PROPERTY(int amount READ amountGet CONSTANT)
+    Q_PROPERTY(int secondaryAmount READ secondaryAmountGet CONSTANT)
 public:
-    enum Target {
-        NO_TARGET = 0,
-        PLAYER,
-        OTHER_PLAYERS,
-        ALL_PLAYERS,
-    };
-    Q_ENUMS(Target);
-    enum Action {
-        NO_ACTION = 0,
-        DRAW_CHANCE,
-        DRAW_FINANCE,
-        FEE,
-        FEE_PER_RACE,
-        FEE_PER_STEP,
-        GAIN,
-        TRANSFER,
-        WAIT,
-        MOVE_STEPS,
-        CANCEL_SUSPENSION,
-        MOVE_TO_TRAINER,
-        MOVE_TO_SUSPENSION,
-        MOVE_TO_FINANCE,
-        MOVE_TO_LAST_FIELD,
-        MOVE_TO_FIRST_FIELD,
-        MOVE_TO_PARKING_LOT
-    };
-    Q_ENUMS(Action);
-    Effect(QObject *parent = nullptr, Target target = NO_TARGET, Action action = NO_ACTION, int amount = 0, int secondaryAmount = 0);
-    int amount() const;
-    int secondaryAmount() const;
-private:
-    Target m_target;
-    Action m_effect;
-    int m_amount;
-    int m_secondaryAmount;
+    Q_ENUM(Target);
+    Q_ENUM(Action);
+    UIEffect(QObject *parent = nullptr, const Effect &effect = {});
+    int amountGet() const;
+    int secondaryAmountGet() const;
 };
 
 
-class UICard : public Effect {
+class UICard : public QObject, public Effect {
     Q_OBJECT
 public:
-    UICard(QObject *parent = nullptr, const QString &text = {}, Target target = NO_TARGET, Action action = NO_ACTION, int amount = 0, int secondaryAmount = 0);
+    UICard(QObject *parent = nullptr, const QString &text = {}, const Effect &effect = {});
 private:
-    QString m_text;
+    QString text;
+    UIEffect *uiEffect { nullptr };
 };
 
 
-class Field : public QObject {
+class UIField : public QObject, public Field {
     Q_OBJECT
-    Q_PROPERTY(QString name READ name CONSTANT)
-    Q_PROPERTY(QColor color READ color CONSTANT)
-    Q_PROPERTY(int price READ price CONSTANT)
-    Q_PROPERTY(int fee READ fee NOTIFY feeChanged)
+    Q_PROPERTY(int id READ idGet CONSTANT)
+    Q_PROPERTY(QString name READ nameGet CONSTANT)
+    Q_PROPERTY(QColor color READ colorGet CONSTANT)
+    Q_PROPERTY(int price READ priceGet CONSTANT)
+    Q_PROPERTY(int upgradePrice READ upgradePriceGet CONSTANT)
+    Q_PROPERTY(Type type READ typeGet CONSTANT)
+    Q_PROPERTY(UIOpponent* owner READ ownerGet NOTIFY ownerChanged)
+    //Q_PROPERTY(int fee READ feeGet NOTIFY feeChanged)
 public:
-    Field(QObject *parent = nullptr, const QString &name = {}, int price = 0, QList<Effect*> effect = {}, QColor color = Qt::white, int upgrade = -1);
+    UIField(QObject *parent = nullptr, const Field &field = {});
+    // This has to be the same as Field::Type because I couldn't figure out how to pass it to QML
+    // (or ideally, it could be just fixed)
+    enum Type {
+        BASIC = 0,
+        HORSE,
+        TRAINER,
+        TRANSPORT,
+        DECK
+    };
+    Q_ENUM(Type)
 
-    QString name() const;
-    int price() const;
-    int fee() const;
-    QColor color() const;
+    int idGet() const;
+    QString nameGet() const;
+    int priceGet() const;
+    int upgradePriceGet() const;
+    QColor colorGet() const;
+    Type typeGet() const;
+    UIOpponent *ownerGet();
 signals:
     void feeChanged();
+    void ownerChanged();
 private:
-    QString m_name;
-    QList<Effect*> m_effect;
-    int m_price;
-    QColor m_color;
+    QList<Effect*> m_effects;
     int m_upgrade;
+    QPointer<UIOpponent> m_owner { nullptr };
 };
+Q_DECLARE_METATYPE(UIField::Type);
 
 
 class Board : public QObject {
     Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<Field> fields READ fields CONSTANT)
+    Q_PROPERTY(QQmlListProperty<UIField> fields READ fields CONSTANT)
     Q_PROPERTY(int fieldCount READ fieldCount CONSTANT)
 public:
     Board(QObject *parent = nullptr);
 
-    QQmlListProperty<Field> fields();
+    QQmlListProperty<UIField> fields();
     int fieldCount() const;
 
 private:
-    QList<Field*> m_fields {
-        #include "../def/fields.def"
+    QList<UIField*> m_fields {
     };
 };
 
@@ -442,6 +432,7 @@ public slots:
     void refreshRoster();
     void setReady(bool val);
     void startGame();
+    void move(int id, int position);
 
 private slots:
     void onReadyRead() {

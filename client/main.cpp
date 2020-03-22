@@ -10,10 +10,12 @@ int main(int argc, char *argv[]) {
 
     qsrand(time(nullptr));
 
+    qRegisterMetaType<UIField::Type>();
+
     qmlRegisterUncreatableType<Game>("monopoly", 1, 0, "GameData", "Created by core");
     qmlRegisterUncreatableType<Board>("monopoly", 1, 0, "BoardData", "Created by core");
     qmlRegisterUncreatableType<Player>("monopoly", 1, 0, "PlayerData", "Created by core");
-    qmlRegisterUncreatableType<Field>("monopoly", 1, 0, "FieldData", "Created by core");
+    qmlRegisterUncreatableType<UIField>("monopoly", 1, 0, "FieldData", "Created by core");
     qmlRegisterUncreatableType<Client>("monopoly", 1, 0, "ClientData", "Created by core");
     qmlRegisterUncreatableType<UIRoster>("monopoly", 1, 0, "RosterData", "Created by core");
     qmlRegisterUncreatableType<UIMatch>("monopoly", 1, 0, "MatchData", "Created by core");

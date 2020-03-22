@@ -24,38 +24,58 @@ Item {
             bottom: parent.bottom
             left: board.right
         }
-        ListView {
+        ColumnLayout {
             anchors.fill: parent
-            model: client.opponents
-            delegate: Rectangle {
-                width: parent.width
-                height: 64
-                ColumnLayout {
-                    RowLayout {
-                        Rectangle {
-                            width: 8
-                            height: width
-                            radius: width / 2
-                            color: modelData.color
-                        }
+            Flow {
+                Repeater {
+                    model: client.opponents
+                    Rectangle {
+                        width: opponentLayout.width
+                        height: opponentLayout.height
+                        border.width: 1
+                        border.color: "gray"
+                        ColumnLayout {
+                            id: opponentLayout
+                            RowLayout {
+                                Rectangle {
+                                    width: 10
+                                    height: width
+                                    radius: width / 2
+                                    color: modelData.color
+                                    border.color: "black"
+                                    border.width: 1
+                                }
 
-                        Text {
-                            text: "Player " + modelData.name + " has " + modelData.money + " monies."
-                        }
-                    }
-                    RowLayout {
-                        SpinBox {
-                            id: moveBy
-                            from: 1
-                            to: 6
-                        }
-                        Button {
-                            onClicked: modelData.move(moveBy.value)
-                            text: "Move"
+                                Text {
+                                    text: modelData.name
+                                    font.bold: true
+                                }
+                            }
+                            Text {
+                                text: "Money: " + modelData.money
+                            }
+                            RowLayout {
+                                SpinBox {
+                                    id: moveBy
+                                    from: 1
+                                    to: 6
+                                }
+                                Button {
+                                    onClicked: client.move(modelData.id, modelData.position + moveBy.value)
+                                    text: "Move"
+                                }
+                            }
                         }
                     }
                 }
             }
+            Chat {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+            }
         }
+    }
+    CardView {
+        id: cardView
     }
 }

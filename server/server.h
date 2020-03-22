@@ -9,19 +9,9 @@
 
 class ClientConnection;
 
-struct Game : public Match {
-    Game(const Match& match)
-        : Match(match) {}
-    QList<ClientConnection*> clients;
-    GameState state {{
-        { {"AHOJ"}, 0 }
-    }};
-};
-
-inline QSet<Game*> games {};
-
 inline int lastGameID { 1 };
 inline int lastPlayerID { 1 };
+inline int lastCardID { 1 };
 
 inline QList<QColor> colors {
     Qt::red,
@@ -32,6 +22,21 @@ inline QList<QColor> colors {
     Qt::magenta,
     Qt::white,
     Qt::black,
+};
+
+
+struct Game : public Match {
+    Game(const Match& match)
+        : Match(match) {}
+    QList<ClientConnection*> clients;
+    GameState state {{
+        { {"AHOJ"}, 0 }
+    }};
+};
+
+inline QSet<Game*> games {};
+inline QList<Field> fields {
+    #include "../def/fields.def"
 };
 
 class ClientConnection : public QObject {
@@ -143,6 +148,10 @@ private slots:
                                 c->m_money = i.money;
                                 changed = true;
                             }
+                            if (i.position >= 0) {
+                                c->m_position = i.position % 40;
+                                changed = true;
+                            }
                             if (c->m_clientReady != i.ready) {
                                 qCritical() << "Changing ready to" << i.ready;
                                 c->m_clientReady = i.ready;
@@ -233,13 +242,14 @@ private:
                 o.color = i->m_clientColor;
                 o.ready = i->m_clientReady;
                 o.you = i == client;
+                o.position = i->m_position;
                 o.money = i->m_money;
                 o.leader = first;
                 first = false;
                 opponents.append(o);
             }
             client->m_dataStream << Packet(opponents);
-            client->m_clientColor = colors[position];
+            client->m_clientColor = colors[position / 8];
             position++;
         }
     }
@@ -252,6 +262,7 @@ private:
     int m_clientId { lastPlayerID++ };
     int m_money { 30000 };
     QColor m_clientColor { Qt::red };
+    int m_position { 0 };
 };
 
 class Server : public QObject {

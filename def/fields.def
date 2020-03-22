@@ -1,279 +1,282 @@
-new Field(this, "START", 0, {
-    new Effect { this, Effect::PLAYER, Effect::GAIN, 4000 }
-}),
+Field(lastCardID++, "START", 0, {
+    Effect { Effect::PLAYER, Effect::GAIN, 4000 }
+}, QColor("white"), 0, Field::BASIC),
 
-new Field(this, "Fantome", 1200, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 40 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 200 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 600 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1800 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3200 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 5000 },
-}, QColor("orange")),
+Field(lastCardID++, "Fantome", 1200, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 40 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 200 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 600 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1800 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 3200 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 5000 },
+}, QColor("orange"), 1000, Field::HORSE),
 
-new Field(this, "Finance", 0, {
-    new Effect { this, Effect::PLAYER, Effect::DRAW_FINANCE }
-}),
+Field(lastCardID++, "Finance", 0, {
+    Effect { Effect::PLAYER, Effect::DRAW_FINANCE }
+}, QColor("white"), 0, Field::DECK),
 
-new Field(this, "Gavora", 1200, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 40 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 200 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 600 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1800 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3200 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 5000 },
-}, QColor("orange")),
+Field(lastCardID++, "Gavora", 1200, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 40 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 200 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 600 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1800 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 3200 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 5000 },
+}, QColor("orange"), 1000, Field::HORSE),
 
-new Field(this, "Veterinární vyšetření", 0, {
-    new Effect { this, Effect::PLAYER, Effect::FEE, 500 }
-}),
+Field(lastCardID++, "Veterinární vyšetření", 0, {
+    Effect { Effect::PLAYER, Effect::FEE, 500 }
+}, QColor("white"), 0, Field::BASIC),
 
-new Field(this, "1. trenér", 4000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
-}),
+Field(lastCardID++, "1. trenér", 4000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 2000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 3000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 4000 },
+}, QColor("white"), 0, Field::TRAINER),
 
-new Field(this, "Lady Anne", 2000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 120 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 600 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1800 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 5400 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 8000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 11000 },
-}, QColor("brown")),
+Field(lastCardID++, "Lady Anne", 2000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 120 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 600 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1800 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 5400 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 8000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 11000 },
+}, QColor("brown"), 1000, Field::HORSE),
 
-new Field(this, "Náhoda", 0, {
-    new Effect { this, Effect::PLAYER, Effect::DRAW_CHANCE }
-}),
+Field(lastCardID++, "Náhoda", 0, {
+    Effect { Effect::PLAYER, Effect::DRAW_CHANCE }
+}, QColor("white"), 0, Field::DECK),
 
-new Field(this, "Pasek", 2000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 120 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 600 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1200 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 5400 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 8000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 11000 },
-}, QColor("brown")),
+Field(lastCardID++, "Pasek", 2000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 120 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 600 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1200 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 5400 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 8000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 11000 },
+}, QColor("brown"), 1000, Field::HORSE),
 
-new Field(this, "Koran", 2400, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 160 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 800 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 6000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 9000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 12000 },
-}, QColor("brown")),
+Field(lastCardID++, "Koran", 2400, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 160 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 800 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 2000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 6000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 9000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 12000 },
+}, QColor("brown"), 1000, Field::HORSE),
 
-new Field(this, "Distanc", 0, {
-    new Effect { this, Effect::PLAYER, Effect::WAIT, -1 }
-}),
+Field(lastCardID++, "Distanc", 0, {
+    Effect { Effect::PLAYER, Effect::WAIT, -1 }
+}, QColor("white"), 0, Field::BASIC),
 
-new Field(this, "Neklan", 2800, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 200 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 9000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 12500 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 15000 },
-}, QColor("lightblue")),
+Field(lastCardID++, "Neklan", 2800, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 200 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 3000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 9000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 12500 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 15000 },
+}, QColor("lightblue"), 2000, Field::HORSE),
 
-new Field(this, "Přeprava", 3000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 80 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 200 },
-}),
+Field(lastCardID++, "Přeprava", 3000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 80 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 200 },
+}, QColor("white"), 0, Field::TRANSPORT),
 
-new Field(this, "Portlancl", 2800, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 200 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 9000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 12500 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 15000 },
-}, QColor("lightblue")),
+Field(lastCardID++, "Portlancl", 2800, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 200 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 3000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 9000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 12500 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 15000 },
+}, QColor("lightblue"), 2000, Field::HORSE),
 
-new Field(this, "Japan", 2800, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 240 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1200 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3600 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 10000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 14000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 18000 },
-}, QColor("lightblue")),
+Field(lastCardID++, "Japan", 2800, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 240 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1200 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 3600 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 10000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 14000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 18000 },
+}, QColor("lightblue"), 2000, Field::HORSE),
 
-new Field(this, "2. trenér", 4000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
-}),
+Field(lastCardID++, "2. trenér", 4000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 2000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 3000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 4000 },
+}, QColor("white"), 0, Field::TRAINER),
 
-new Field(this, "Kostrava", 3600, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 280 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1400 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 11000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 15000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 19000 },
-}, QColor("greenyellow")),
+Field(lastCardID++, "Kostrava", 3600, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 280 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1400 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 4000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 11000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 15000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 19000 },
+}, QColor("greenyellow"), 2000, Field::HORSE),
 
-new Field(this, "Finance", 0, {
-    new Effect { this, Effect::PLAYER, Effect::DRAW_FINANCE }
-}),
+Field(lastCardID++, "Finance", 0, {
+    Effect { Effect::PLAYER, Effect::DRAW_FINANCE }
+}, QColor("white"), 0, Field::DECK),
 
-new Field(this, "Lukava", 3600, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 280 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1400 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 11000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 15000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 19000 },
-}, QColor("greenyellow")),
+Field(lastCardID++, "Lukava", 3600, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 280 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1400 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 4000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 11000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 15000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 19000 },
+}, QColor("greenyellow"), 2000, Field::HORSE),
 
-new Field(this, "Melák", 4000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 320 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1600 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4400 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 12000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 16000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 20000 },
-}, QColor("greenyellow")),
+Field(lastCardID++, "Melák", 4000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 320 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1600 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 4400 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 12000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 16000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 20000 },
+}, QColor("greenyellow"), 2000, Field::HORSE),
 
-new Field(this, "Parkoviště"),
+Field(lastCardID++, "Parkoviště", 0, {
+}, QColor("white"), 0, Field::BASIC),
 
-new Field(this, "Grifel", 4400, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 360 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1800 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 5000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 14000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 17000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 21000 },
-}, QColor("red")),
+Field(lastCardID++, "Grifel", 4400, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 360 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1800 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 5000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 14000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 17000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 21000 },
+}, QColor("red"), 3000, Field::HORSE),
 
-new Field(this, "Náhoda", 0, {
-    new Effect { this, Effect::PLAYER, Effect::DRAW_CHANCE }
-}),
+Field(lastCardID++, "Náhoda", 0, {
+    Effect { Effect::PLAYER, Effect::DRAW_CHANCE }
+}, QColor("white"), 0, Field::DECK),
 
-new Field(this, "Mohyla", 4400, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 360 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1800 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 5000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 14000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 17000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 21000 },
-}, QColor("red")),
+Field(lastCardID++, "Mohyla", 4400, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 360 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1800 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 5000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 14000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 17000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 21000 },
+}, QColor("red"), 3000, Field::HORSE),
 
-new Field(this, "Metál", 4800, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 400 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 6000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 15000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 18000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 22000 },
-}, QColor("red")),
+Field(lastCardID++, "Metál", 4800, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 400 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 2000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 6000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 15000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 18000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 22000 },
+}, QColor("red"), 3000, Field::HORSE),
 
-new Field(this, "3. trenér", 4000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
-}),
+Field(lastCardID++, "3. trenér", 4000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 2000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 3000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 4000 },
+}, QColor("white"), 0, Field::TRAINER),
 
-new Field(this, "Tara", 5200, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 440 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2200 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 6600 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 16000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 19500 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 23000 },
-}, QColor("yellow")),
+Field(lastCardID++, "Tara", 5200, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 440 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 2200 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 6600 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 16000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 19500 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 23000 },
+}, QColor("yellow"), 3000, Field::HORSE),
 
-new Field(this, "Furioso", 5200, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 440 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2200 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 6600 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 16000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 19500 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 23000 },
-}, QColor("yellow")),
+Field(lastCardID++, "Furioso", 5200, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 440 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 2200 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 6600 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 16000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 19500 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 23000 },
+}, QColor("yellow"), 3000, Field::HORSE),
 
-new Field(this, "Stáje", 3000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 80 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 200 },
-}),
+Field(lastCardID++, "Stáje", 3000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 80 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 200 },
+}, QColor("white"), 0, Field::TRANSPORT),
 
-new Field(this, "Genius", 5600, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 580 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2400 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 7200 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 17000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 20500 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 24000 },
-}, QColor("yellow")),
+Field(lastCardID++, "Genius", 5600, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 580 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 2400 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 7200 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 17000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 20500 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 24000 },
+}, QColor("yellow"), 3000, Field::HORSE),
 
-new Field(this, "Podezření z dopingu"),
+Field(lastCardID++, "Podezření z dopingu", 0, {
+    Effect { Effect::PLAYER, Effect::WAIT, 1 },
+}, QColor("white"), 0, Field::BASIC),
 
-new Field(this, "Shagga", 6000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 500 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2600 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 7800 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 18000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 22000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 25500 },
-}, QColor("green")),
+Field(lastCardID++, "Shagga", 6000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 500 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 2600 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 7800 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 18000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 22000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 25500 },
+}, QColor("green"), 4000, Field::HORSE),
 
-new Field(this, "Dahoman", 6000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 500 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2600 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 7800 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 18000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 22000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 25500 },
-}, QColor("green")),
+Field(lastCardID++, "Dahoman", 6000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 500 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 2600 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 7800 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 18000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 22000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 25500 },
+}, QColor("green"), 4000, Field::HORSE),
 
-new Field(this, "Finance", 0, {
-    new Effect { this, Effect::PLAYER, Effect::DRAW_FINANCE }
-}),
+Field(lastCardID++, "Finance", 0, {
+    Effect { Effect::PLAYER, Effect::DRAW_FINANCE }
+}, QColor("white"), 0, Field::DECK),
 
-new Field(this, "Gira", 6400, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 560 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 9000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 20000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 24000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 28000 },
-}, QColor("green")),
+Field(lastCardID++, "Gira", 6400, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 560 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 3000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 9000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 20000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 24000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 28000 },
+}, QColor("green"), 4000, Field::HORSE),
 
-new Field(this, "4. trenér", 4000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 2000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
-}),
+Field(lastCardID++, "4. trenér", 4000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 2000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 3000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 4000 },
+}, QColor("white"), 0, Field::TRAINER),
 
-new Field(this, "Náhoda", 0, {
-    new Effect { this, Effect::PLAYER, Effect::DRAW_CHANCE }
-}),
+Field(lastCardID++, "Náhoda", 0, {
+    Effect { Effect::PLAYER, Effect::DRAW_CHANCE }
+}, QColor("white"), 0, Field::DECK),
 
-new Field(this, "Narcius", 7000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 700 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 3500 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 10000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 22000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 26000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 30000 },
-}, QColor("slateblue")),
+Field(lastCardID++, "Narcius", 7000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 700 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 3500 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 10000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 22000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 26000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 30000 },
+}, QColor("slateblue"), 4000, Field::HORSE),
 
-new Field(this, "Veterinární vyšetření", 0,  {
-    new Effect { this, Effect::PLAYER, Effect::FEE, 500 }
-}),
+Field(lastCardID++, "Veterinární vyšetření", 0,  {
+    Effect { Effect::PLAYER, Effect::FEE, 500 }
+}, QColor("white"), 0, Field::BASIC),
 
-new Field(this, "Napoli", 8000, {
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 1000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 4000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 12000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 28000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 34000 },
-    new Effect { this, Effect::PLAYER, Effect::TRANSFER, 40000 },
-}, QColor("slateblue"))
+Field(lastCardID++, "Napoli", 8000, {
+    Effect { Effect::PLAYER, Effect::TRANSFER, 1000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 4000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 12000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 28000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 34000 },
+    Effect { Effect::PLAYER, Effect::TRANSFER, 40000 },
+}, QColor("slateblue"), 4000, Field::HORSE)

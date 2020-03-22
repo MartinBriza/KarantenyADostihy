@@ -39,64 +39,82 @@ void Player::move(int by) {
     emit positionChanged();
 }
 
-Effect::Effect(QObject *parent, Effect::Target target, Effect::Action action, int amount, int secondaryAmount)
+UIEffect::UIEffect(QObject *parent, const Effect &effect)
     : QObject(parent)
+    , Effect(effect)
 {
 
 }
 
-int Effect::amount() const {
-    return m_amount;
+int UIEffect::amountGet() const {
+    return amount;
 }
 
-int Effect::secondaryAmount() const {
-    return m_secondaryAmount;
+int UIEffect::secondaryAmountGet() const {
+    return secondaryAmount;
 }
 
-UICard::UICard(QObject *parent, const QString &text, Effect::Target target, Effect::Action action, int amount, int secondaryAmount)
-    : Effect(parent, target, action, amount, secondaryAmount)
-    , m_text(text)
-{
-
-}
-
-Field::Field(QObject *parent, const QString &name, int price, QList<Effect *> effect, QColor color, int upgrade)
+UICard::UICard(QObject *parent, const QString &text, const Effect &effect)
     : QObject(parent)
-    , m_name(name)
-    , m_effect(effect)
-    , m_price(price)
-    , m_color(color)
-    , m_upgrade(upgrade)
+    , Effect(effect)
+    , text(text)
 {
-    emit feeChanged();
+    uiEffect = new UIEffect(this, effect);
 }
 
-QString Field::name() const {
-    return m_name;
+UIField::UIField(QObject *parent, const Field &field)
+    : QObject(parent)
+    , Field(field)
+{
+    this->effects.clear();
+    for (auto i : field.effects) {
+        this->m_effects.append(new UIEffect(this, i));
+    }
+    // non-ui effects are not necessary
+    effects.clear();
 }
 
-int Field::price() const {
-    return m_price;
+int UIField::idGet() const {
+    return id;
 }
 
-int Field::fee() const {
-    if (m_effect.count() > 0)
-        return m_effect.first()->amount();
-    return 0;
+QString UIField::nameGet() const {
+    return name;
 }
 
-QColor Field::color() const {
-    return m_color;
+int UIField::priceGet() const {
+    return price;
+}
+
+int UIField::upgradePriceGet() const {
+    return upgradePrice;
+}
+
+QColor UIField::colorGet() const {
+    return color;
+}
+
+UIField::Type UIField::typeGet() const {
+    return (UIField::Type) type;
+}
+
+UIOpponent *UIField::ownerGet() {
+    return m_owner;
 }
 
 Board::Board(QObject *parent)
     : QObject(parent)
 {
-
+    QList<Field> f {
+        #include "../def/fields.def"
+    };
+    for (auto i : f) {
+        m_fields.append(new UIField(this, i));
+    }
 }
 
-QQmlListProperty<Field> Board::fields() {
-    return QQmlListProperty<Field>(this, m_fields);
+QQmlListProperty<UIField> Board::fields() {
+    return QQmlListProperty<UIField>(this, m_fields);
 }
 
 int Board::fieldCount() const {
@@ -208,12 +226,16 @@ void Client::setReady(bool val) {
     qCritical() << "This player ID is" << m_thisPlayerId;
     if (m_thisPlayerId > 0) {
         qCritical() << "Trying to set ready to" << val;
-        m_dataStream << Packet(QList<Opponent>{{m_thisPlayerId, {}, {}, -1, {}, val, {}}});
+        m_dataStream << Packet(QList<Opponent>{{m_thisPlayerId, {}, {}, -1, -1, {}, val, {}}});
     }
 }
 
 void Client::startGame() {
     m_dataStream << Packet(GameState{});
+}
+
+void Client::move(int id, int position) {
+    m_dataStream << Packet(QList<Opponent>{{id, {}, {}, -1, position, {}, {}, {}}});
 }
 
 UIRoster::UIRoster(Client *parent)

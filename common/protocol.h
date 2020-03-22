@@ -5,6 +5,90 @@
 #include <QDataStream>
 #include <QColor>
 
+
+struct Effect {
+    enum Target {
+        NO_TARGET = 0,
+        PLAYER,
+        OTHER_PLAYERS,
+        ALL_PLAYERS,
+    };
+    enum Action {
+        NO_ACTION = 0,
+        DRAW_CHANCE,
+        DRAW_FINANCE,
+        FEE,
+        FEE_PER_RACE,
+        FEE_PER_STEP,
+        GAIN,
+        TRANSFER,
+        WAIT,
+        MOVE_STEPS,
+        CANCEL_SUSPENSION,
+        MOVE_TO_TRAINER,
+        MOVE_TO_SUSPENSION,
+        MOVE_TO_FINANCE,
+        MOVE_TO_LAST_FIELD,
+        MOVE_TO_FIRST_FIELD,
+        MOVE_TO_PARKING_LOT
+    };
+    Target target { NO_TARGET };
+    Action effect { NO_ACTION };
+    int amount { 0 };
+    int secondaryAmount { 0 };
+};
+inline QDataStream &operator<<(QDataStream &str, const Effect &item) {
+    str << (const int&) item.target << (const int&) item.effect << item.amount << item.secondaryAmount;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Effect &item) {
+    str >> (int&) item.target >> (int&) item.effect >> item.amount >> item.secondaryAmount;
+    return str;
+}
+
+struct Field {
+    enum Type {
+        BASIC = 0,
+        HORSE,
+        TRAINER,
+        TRANSPORT,
+        DECK
+    };
+    Field(int id = 0, const QString &name = {}, int price = 0, const QList<Effect> &effects = {}, const QColor &color = Qt::white, int upgradePrice = 0, Type type = BASIC)
+        : id(id), name(name), price(price), effects(effects), color(color), upgradePrice(upgradePrice), type(type)
+    {
+
+    }
+    QString name {};
+    QList<Effect> effects {};
+    QColor color { Qt::white };
+    int id { 0 };
+    int price { 0 };
+    int upgradePrice { 0 };
+    Type type { BASIC };
+};
+inline QDataStream &operator<<(QDataStream &str, const Field &item) {
+    str << item.id << item.name << item.effects << item.color << item.price << item.upgradePrice << (const int &) item.type;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Field &item) {
+    str >> item.id >> item.name >> item.effects >> item.color >> item.price >> item.upgradePrice >> (int &) item.type;
+    return str;
+}
+
+struct Ownership {
+    int player;
+    int card;
+};
+inline QDataStream &operator<<(QDataStream &str, const Ownership &item) {
+    str << item.player << item.card;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Ownership &item) {
+    str >> item.player >> item.card;
+    return str;
+}
+
 struct Ahoj {
     QString ahoj { };
 };
@@ -160,6 +244,7 @@ struct Packet {
         OPPONENTS,
         CHAT,
         GAMESTATE,
+        OWNERSHIPS,
     } type { NONE };
     union {
         QString error;
@@ -172,6 +257,7 @@ struct Packet {
         QList<Opponent> opponents;
         Chat chat;
         GameState gameState;
+        QList<Ownership> ownerships;
     };
     Packet() {}
     Packet(Type type, const QString &text) : type(type) {
@@ -190,6 +276,7 @@ struct Packet {
     Packet(const Chat &d) : type(CHAT), chat(d) { }
     Packet(const QList<Opponent> &d) : type(OPPONENTS), opponents(d) { }
     Packet(const GameState &d) : type(GAMESTATE), gameState(d) { }
+    Packet(const QList<Ownership> &d) : type(OWNERSHIPS), ownerships(d) { }
     void setType(Type type) {
         clear();
         this->type = type;
@@ -226,6 +313,9 @@ struct Packet {
         case GAMESTATE:
             new (&gameState) GameState();
             break;
+        case OWNERSHIPS:
+            new (&ownerships) QList<Ownership>();
+            break;
         }
     }
     void clear() {
@@ -261,6 +351,9 @@ struct Packet {
             break;
         case GAMESTATE:
             gameState.~GameState();
+            break;
+        case OWNERSHIPS:
+            ownerships.~QList<Ownership>();
             break;
         }
         type = NONE;
@@ -305,6 +398,9 @@ inline QDataStream &operator<<(QDataStream &str, const Packet &item) {
         break;
     case Packet::GAMESTATE:
         str << item.gameState;
+        break;
+    case Packet::OWNERSHIPS:
+        str << item.ownerships;
         break;
     default:
         str.setStatus(QDataStream::WriteFailed);
@@ -356,6 +452,10 @@ inline QDataStream &operator>>(QDataStream &str, Packet &item) {
     }
     case Packet::GAMESTATE: {
         str >> item.gameState;
+        break;
+    }
+    case Packet::OWNERSHIPS: {
+        str >> item.ownerships;
         break;
     }
     default: {
