@@ -29,7 +29,7 @@ Item {
                         Layout.fillWidth: true
                         text: message
                         font.bold: urgency > 0
-                        color: urgency > 1 ? "red" : "black"
+                        color: urgency > 1 ? "red" : urgency > 0 ? "black" : "gray"
                     }
                 }
             }

@@ -4,7 +4,7 @@
 #include <QDebug>
 #include <QDataStream>
 #include <QColor>
-
+#include <QTime>
 
 struct Effect {
     enum Target {
@@ -190,10 +190,21 @@ inline QDataStream &operator>>(QDataStream &str, Opponent &item) {
 }
 
 struct Chat {
-    QString time;
-    QString from;
-    QString message;
-    int urgency;
+    Chat(const QString &time, const QString &from, const QString &message, int urgency)
+        : time(time), from(from), message(message), urgency(urgency)
+    {}
+    Chat(const QString &message = {})
+        : time(QTime().toString())
+        , from(QString())
+        , message(message)
+        , urgency(0)
+    {
+
+    }
+    QString time {};
+    QString from {};
+    QString message {};
+    int urgency {1};
 };
 inline QDataStream &operator<<(QDataStream &str, const Chat &item) {
     str << item.time << item.from << item.message << item.urgency;

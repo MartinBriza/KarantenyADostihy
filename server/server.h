@@ -130,10 +130,7 @@ private slots:
                 for (auto *i : games) {
                     // another great design decision
                     if (i->clients.contains(this)) {
-                        for (auto c : i->clients) {
-                            if (c->m_socket->isWritable())
-                                c->m_dataStream << Packet(Chat{ p.chat.time, p.chat.from, p.chat.message, 0 });
-                        }
+                        sendMessage(i, Chat{ p.chat.time, p.chat.from, p.chat.message, 0 });
                     }
                 }
                 break;
@@ -149,23 +146,28 @@ private slots:
                     for (auto c : game->clients) {
                         if (c->m_clientId == i.id) {
                             if (!i.name.isEmpty()) {
+                                sendMessage(game, Chat{QString("<%1> changed the name of <%2> to \"%3\".").arg(m_clientName).arg(c->m_clientName).arg(i.name)});
                                 c->m_clientName = i.name;
                                 changed = true;
                             }
                             if (i.color.isValid()) {
+                                sendMessage(game, Chat{QString("<%1> changed the color of <%2> to \"%3\".").arg(m_clientName).arg(c->m_clientName).arg(i.color.name())});
                                 c->m_clientColor = i.color;
                                 changed = true;
                             }
                             if (i.money >= 0) {
+                                sendMessage(game, Chat{QString("<%1> changed the money of <%2> to \"%3\" from \"%4\".").arg(m_clientName).arg(c->m_clientName).arg(i.money).arg(c->m_money)});
                                 c->m_money = i.money;
                                 changed = true;
                             }
                             if (i.position >= 0) {
+                                sendMessage(game, Chat{QString("<%1> changed the position of <%2> to \"%3\" from \"%4\".").arg(m_clientName).arg(c->m_clientName).arg(i.position % 40).arg(c->m_position)});
                                 c->m_position = i.position % 40;
                                 changed = true;
                             }
                             if (c->m_clientReady != i.ready) {
                                 qCritical() << "Changing ready to" << i.ready;
+                                sendMessage(game, Chat{QString("<%1> is now %1 ready.").arg(m_clientName).arg(i.ready ? "" : "not")});
                                 c->m_clientReady = i.ready;
                                 changed = true;
                             }
@@ -203,10 +205,12 @@ private slots:
                                         }
                                         m_money -= card->price;
                                         game->ownerships[card] = i.player;
+                                        sendMessage(game, Chat{QString("<%1> bought %2.").arg(m_clientName).arg(card->name)});
                                         updateOwnerships(game);
                                         updateOpponents(game);
                                     } else if (game->ownerships[card] == m_clientId) {
                                         game->ownerships[card] = i.player;
+                                        sendMessage(game, Chat{QString("<%1> gave %2 to <%3>.").arg(m_clientName).arg(card->name).arg(client->m_clientName)});
                                         updateOwnerships(game);
                                     } else {
                                         m_dataStream << Packet(Packet::ERROR, "Nemůžeš koupit nebo prodat kartu, kterou vlastní někdo jiný");
@@ -227,6 +231,12 @@ private slots:
         deleteLater();
     }
 private:
+    void sendMessage(Game *game, Chat message) {
+        for (auto c : game->clients) {
+            if (c->m_socket->isWritable())
+                c->m_dataStream << Packet(message);
+        }
+    }
     Game *clientGame() {
         for (auto i : games) {
             if (i->clients.contains(this))
@@ -251,6 +261,7 @@ private:
                 game->clients.append(this);
                 game->players++;
                 m_dataStream << Packet(Entered{ game->id, game->name });
+                sendMessage(game, Chat{QString("<%1> joined this game.").arg(m_clientName)});
                 updateOpponents(game);
             }
         }
@@ -261,6 +272,7 @@ private:
             if (game->clients.contains(this)) {
                 game->clients.removeOne(this);
                 game->players--;
+                sendMessage(game, Chat{QString("<%1> left this game.").arg(m_clientName)});
                 if (notify)
                     updateOpponents(game);
                 handleEmptyGame(game);

@@ -84,6 +84,7 @@ Item {
                                         Component.onCompleted: console.log("My index is " + index)
                                         Text {
                                             font.pixelSize: parent.height
+                                            opacity: parent.enabled ? 1.0 : 0.3
                                             text: modelData
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             anchors.bottom: parent.bottom
