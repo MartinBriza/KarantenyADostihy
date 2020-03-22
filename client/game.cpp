@@ -179,9 +179,7 @@ void Client::refreshRoster() {
 }
 
 void Client::setReady(bool val) {
-    qCritical() << "This player ID is" << m_thisPlayerId;
     if (m_thisPlayerId > 0) {
-        qCritical() << "Trying to set ready to" << val;
         m_dataStream << Packet(QList<Opponent>{{m_thisPlayerId, {}, {}, -1, -1, {}, val, {}}});
     }
 }
@@ -206,7 +204,7 @@ void Client::drawCard(int type) {
         m_dataStream << Packet(Card{"finance", {}});
     }
     else {
-        qCritical() << "DrawCard called with type" << type << "instead of" << (int)Effect::DRAW_CHANCE << "or" << (int)Effect::DRAW_FINANCE;
+        qWarning() << "DrawCard called with type" << type << "instead of" << (int)Effect::DRAW_CHANCE << "or" << (int)Effect::DRAW_FINANCE;
     }
 }
 

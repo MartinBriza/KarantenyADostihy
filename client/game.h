@@ -465,7 +465,6 @@ private slots:
                 break;
             case Packet::ENTERED: {
                 if (p.entered.id >= 0) {
-                    qCritical() << "Entering a room";
                     m_lobby = new UILobby(this, p.entered.id, p.entered.name);
                     emit lobbyChanged();
                     m_state = LOBBY;
@@ -481,7 +480,6 @@ private slots:
                 break;
             }
             case Packet::OPPONENTS: {
-                qCritical() << "OPPONENTS!";
                 QSet<int> oldIDs;
                 QSet<int> newIDs;
                 for (auto i : m_opponents)
@@ -511,7 +509,6 @@ private slots:
                 break;
             }
             case Packet::CHAT:
-                qCritical()  << "SPAM";
                 m_chat.append(new UIChat(this, p.chat));
                 emit chatChanged();
                 break;
