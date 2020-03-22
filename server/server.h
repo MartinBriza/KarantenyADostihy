@@ -304,6 +304,10 @@ private:
         // totally clean
         int position = 0;
         for (auto client : game->clients) {
+            client->m_clientColor = colors[position / 8];
+            position++;
+        }
+        for (auto client : game->clients) {
             QList<Opponent> opponents;
             bool first = true;
             for (auto i : game->clients) {
@@ -320,8 +324,6 @@ private:
                 opponents.append(o);
             }
             client->m_dataStream << Packet(opponents);
-            client->m_clientColor = colors[position / 8];
-            position++;
         }
     }
 
