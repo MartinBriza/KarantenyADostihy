@@ -5,6 +5,7 @@ import QtQuick.Controls 2.12
 import monopoly 1.0
 
 Dialog {
+    modal: true
     property variant model: null
     function show(obj) {
         model = obj

@@ -12,8 +12,11 @@ Item {
             delegate: Player {
                 model: modelData
 
-                x: 3 + (index % 2) * 32 + board.fieldPosition(modelData.position).x
-                y: 3 + (index % 2) * 32 + board.fieldPosition(modelData.position).y
+                width: board.fieldWidth / 3.5
+                height: width
+
+                x: 3 + (index % 3) * (board.fieldWidth / 3) + board.fieldPosition(modelData.position).x
+                y: 3 + Math.floor(index / 3) * (board.fieldWidth / 3) + board.fieldPosition(modelData.position).y
             }
         }
     }
@@ -27,6 +30,7 @@ Item {
         ColumnLayout {
             anchors.fill: parent
             Flow {
+                Layout.fillWidth: true
                 Repeater {
                     model: client.opponents
                     Rectangle {
@@ -77,5 +81,6 @@ Item {
     }
     CardView {
         id: cardView
+        anchors.centerIn: parent
     }
 }
