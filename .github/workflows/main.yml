@@ -150,8 +150,8 @@ jobs:
       run: |
         cd build
         /usr/local/opt/qt5/bin/macdeployqt client/Client.app -qmldir=../client
-        create-dmg client/Client.app
-        mv " .dmg" ../KarantenyADostihy-macos-${TAG_NAME/v/}.dmg
+        create-dmg client/Client.app || true
+        mv "\ .dmg" ../KarantenyADostihy-macos-${TAG_NAME/v/}.dmg
     - name: Upload to GitHub
       if: github.event_name == 'create'
       run: |
