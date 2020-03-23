@@ -3,6 +3,7 @@ include_directories(../common)
 set(SOURCE_FILES
     main.cpp
     server.cpp
+    clienthandler.cpp
 )
 
 add_executable(Server

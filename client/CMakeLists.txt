@@ -17,6 +17,7 @@ set(TS_FILES Client_cs_CZ.ts)
 set(SOURCE_FILES
     main.cpp
     game.cpp
+    datamodel.cpp
 )
 
 if(ANDROID)
