@@ -7,26 +7,24 @@ import monopoly 1.0
 Dialog {
     modal: true
     property variant model: null
-    function show(header, message) {
-        h.text = header
-        m.text = message
+    function show(h, m) {
+        header.text = h
+        message.text = m
         visible = true
     }
     ColumnLayout {
-        visible: model
-        Rectangle {
+        spacing: 16
+        Text {
             Layout.fillWidth: true
-            height: 8
-            color: "red"
+            horizontalAlignment: Text.AlignHCenter
+            id: header
+            font.pixelSize: 32
+            font.bold: true
         }
         Text {
-            text: "AHOJ"
-        }
-        Text {
-            id: h
-        }
-        Text {
-            id: m
+            Layout.maximumWidth: 320
+            id: message
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
         }
     }
 }

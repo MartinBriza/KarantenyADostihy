@@ -9,7 +9,6 @@ Item {
             cardView.show(header, message)
         }
     }
-
     Board {
         id: board
         width: Math.min(parent.width, parent.height)
@@ -162,5 +161,6 @@ Item {
     }
     CardView {
         id: cardView
+        anchors.centerIn: parent
     }
 }

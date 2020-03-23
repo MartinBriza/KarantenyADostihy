@@ -56,10 +56,10 @@ void Client::buy(int id) {
 
 void Client::drawCard(int type) {
     if (type == Effect::DRAW_CHANCE) {
-        m_dataStream << Packet(Card{"chance", {}});
+        m_dataStream << Packet(Card{{}, "chance", {}});
     }
     else if (type == Effect::DRAW_FINANCE) {
-        m_dataStream << Packet(Card{"finance", {}});
+        m_dataStream << Packet(Card{{}, "finance", {}});
     }
     else {
         qWarning() << "DrawCard called with type" << type << "instead of" << (int)Effect::DRAW_CHANCE << "or" << (int)Effect::DRAW_FINANCE;

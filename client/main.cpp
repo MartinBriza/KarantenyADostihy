@@ -6,6 +6,11 @@
 
 int main(int argc, char *argv[]) {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
+    QCoreApplication::setOrganizationName("Agrofert");
+    QCoreApplication::setOrganizationDomain("ma.rtinbriza.cz");
+    QCoreApplication::setApplicationName("Karanteny");
+
     QGuiApplication app(argc, argv);
 
     qsrand(time(nullptr));
