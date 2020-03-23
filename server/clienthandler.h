@@ -32,6 +32,8 @@ private:
     void updateOwnerships(Game *game);
     void updateOpponents(Game *game);
 
+    void handleEffect(Game *game, const Effect &effect);
+
     inline static int lastPlayerID { 1 };
 
     QTcpSocket *m_socket;

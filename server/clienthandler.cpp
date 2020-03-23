@@ -223,25 +223,17 @@ void ClientHandler::onReadyRead() {
         case Packet::CARD: {
             auto game = clientGame();
             if (p.card.name == "chance") {
-                auto &c = chanceCards[qrand() % chanceCards.count()];
-                sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Náhoda - \"%2\"").arg(m_clientName).arg(c.name)});;
-                m_dataStream << Packet(c);
+                handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_CHANCE});
             }
             else if (p.card.name == "finance") {
-                auto &c = financeCards[qrand() % financeCards.count()];
-                sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Finance - \"%2\"").arg(m_clientName).arg(c.name)});;
-                m_dataStream << Packet(c);
+                handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_FINANCE});
             }
             else if (m_position >= 0 && m_position < fields.count()) {
                 if (fields[m_position].effects.count() > 0 && fields[m_position].effects.first().action == Effect::DRAW_CHANCE) {
-                    auto &c = chanceCards[qrand() % chanceCards.count()];
-                    sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Náhoda - \"%2\"").arg(m_clientName).arg(c.name)});;
-                    m_dataStream << Packet(c);
+                    handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_CHANCE});
                 }
                 else if (fields[m_position].effects.count() > 0 && fields[m_position].effects.first().action == Effect::DRAW_FINANCE) {
-                    auto &c = financeCards[qrand() % financeCards.count()];
-                    sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Finance - \"%2\"").arg(m_clientName).arg(c.name)});;
-                    m_dataStream << Packet(c);
+                    handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_FINANCE});
                 }
                 else {
                     m_dataStream << Packet(Packet::ERROR, "Hele, nevim, co tam nacvičuješ, ale o karty se takhle neříká");
@@ -364,5 +356,75 @@ void ClientHandler::updateOpponents(Game *game) {
             opponents.append(o);
         }
         client->m_dataStream << Packet(opponents);
+    }
+}
+
+void ClientHandler::handleEffect(Game *game, const Effect &effect) {
+    if (!game)
+        return;
+    QList<ClientHandler*> clients;
+
+    switch (effect.target) {
+    case Effect::PLAYER:
+        clients.append(this);
+        break;
+    case Effect::OTHER_PLAYERS:
+        for (auto i : game->clients) {
+            if (i != this)
+                clients.append(i);
+        }
+        break;
+    case Effect::ALL_PLAYERS:
+        clients = game->clients;
+        break;
+    default:
+        break;
+    }
+
+    switch (effect.action) {
+    case Effect::NO_ACTION:
+        break;
+    case Effect::DRAW_CHANCE: {
+        auto &c = chanceCards[qrand() % chanceCards.count()];
+        sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Náhoda - \"%2\"").arg(m_clientName).arg(c.name)});
+        handleEffect(game, c.effect);
+        m_dataStream << Packet(c);
+        break;
+    }
+    case Effect::DRAW_FINANCE: {
+        auto &c = financeCards[qrand() % financeCards.count()];
+        sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Finance - \"%2\"").arg(m_clientName).arg(c.name)});
+        handleEffect(game, c.effect);
+        m_dataStream << Packet(c);
+        break;
+    }
+    case Effect::GAIN:
+        for (auto i : clients)
+            i->m_money += effect.amount;
+        updateOpponents(game);
+        break;
+    case Effect::FEE:
+        for (auto i : clients)
+            i->m_money -= effect.amount;
+        updateOpponents(game);
+        break;
+    case Effect::TRANSFER: {
+        int total = 0;
+        for (auto i : clients) {
+            i->m_money -= effect.amount;
+            total += effect.amount;
+        }
+        m_money += total;
+        updateOpponents(game);
+    }
+    case Effect::MOVE_STEPS: {
+        for (auto i : clients) {
+            i->m_position += effect.amount;
+            if (i->m_position < 0)
+                i->m_position += 40;
+            i->m_position %= 40;
+        }
+        updateOpponents(game);
+    }
     }
 }
