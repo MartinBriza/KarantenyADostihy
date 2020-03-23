@@ -11,5 +11,6 @@
         <file>Chat.qml</file>
         <file>ErrorView.qml</file>
         <file>CardView.qml</file>
+        <file>Settings.qml</file>
     </qresource>
 </RCC>

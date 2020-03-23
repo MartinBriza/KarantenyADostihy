@@ -11,6 +11,9 @@
 
 #include <QTcpSocket>
 
+#define DEFAULT_SERVER "46.36.35.81"
+#define DEFAULT_PORT 16543
+
 class Client : public QObject {
     Q_OBJECT
     Q_PROPERTY(UI::Roster* roster READ roster CONSTANT)
@@ -21,6 +24,9 @@ class Client : public QObject {
     Q_PROPERTY(QQmlListProperty<UI::Opponent> opponents READ opponentsGet NOTIFY opponentsChanged)
     Q_PROPERTY(int thisPlayerId READ thisPlayerId NOTIFY thisPlayerIdChanged)
     Q_PROPERTY(UI::Board *board READ boardGet CONSTANT)
+
+    Q_PROPERTY(QString server READ serverGet WRITE serverSet NOTIFY serverChanged)
+    Q_PROPERTY(int port READ portGet WRITE portSet NOTIFY portChanged)
 public:
     enum State {
         ROSTER,
@@ -39,14 +45,38 @@ public:
     {
         m_refreshTimer.setInterval(5000);
         m_refreshTimer.setSingleShot(false);
+
         connect(&m_refreshTimer, &QTimer::timeout, this, &Client::refreshRoster);
         connect(m_socket, &QTcpSocket::readyRead, this, &Client::onReadyRead);
         connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Client::onError);
         connect(m_socket, &QTcpSocket::stateChanged, this, &Client::onSocketStateChanged);
         QTimer::singleShot(0, [this]() {
-            m_socket->connectToHost("46.36.35.81", 16543);
+            m_socket->connectToHost(settings.value("server", DEFAULT_SERVER).toString(), settings.value("port", DEFAULT_PORT).toInt());
             m_refreshTimer.start();
         });
+    }
+
+    QString serverGet() {
+        return settings.value("server", DEFAULT_SERVER).toString();
+    }
+    void serverSet(const QString &val) {
+        if (settings.value("server", DEFAULT_SERVER).toString() != val) {
+            settings.setValue("server", val);
+            emit serverChanged();
+            m_socket->disconnectFromHost();
+            m_socket->connectToHost(settings.value("server", DEFAULT_SERVER).toString(), settings.value("port", DEFAULT_PORT).toInt());
+        }
+    }
+    int portGet() {
+        return settings.value("port", DEFAULT_PORT).toInt();
+    }
+    void portSet(int val) {
+        if (settings.value("port", DEFAULT_PORT).toInt() != val) {
+            settings.setValue("port", val);
+            emit portChanged();
+            m_socket->disconnectFromHost();
+            m_socket->connectToHost(settings.value("server", DEFAULT_SERVER).toString(), settings.value("port", DEFAULT_PORT).toInt());
+        }
     }
 
     UI::Board *boardGet() {
@@ -61,13 +91,13 @@ public:
     }
 
     QString nameGet() const {
-        return m_name;
+        return settings.value("name", randomName()).toString();
     }
     void nameSet(const QString &name) {
-        if (m_name != name) {
-            m_name = name;
+        if (settings.value("name", randomName()).toString() != name) {
+            return settings.setValue("name", name);
             emit nameChanged();
-            m_dataStream << Packet(Ahoj{m_name});
+            m_dataStream << Packet(Ahoj{name});
         }
     }
 
@@ -101,7 +131,7 @@ public slots:
 private slots:
     void onSocketStateChanged() {
         if (m_socket->state() == QAbstractSocket::ConnectedState) {
-            m_dataStream << Packet(Ahoj{m_name});
+            m_dataStream << Packet(Ahoj{nameGet()});
         }
     }
     void onReadyRead() {
@@ -110,7 +140,7 @@ private slots:
             m_dataStream >> p;
             switch (p.type) {
             case Packet::AHOJ:
-                m_dataStream << Packet(Ahoj{m_name});
+                m_dataStream << Packet(Ahoj{nameGet()});
                 break;
             case Packet::ERROR:
                 qCritical() << "SERVER ERROR: " << p.error;
@@ -208,14 +238,16 @@ signals:
     void chatChanged();
     void opponentsChanged();
     void thisPlayerIdChanged();
+    void serverChanged();
+    void portChanged();
     void serverError(const QString &message);
     void displayCard(const QString &header, const QString &message);
 
 private:
+    QSettings settings;
     QTcpSocket *m_socket { nullptr };
     QDataStream m_dataStream;
     UI::Roster *m_roster { nullptr };
-    QString m_name { randomName() };
     UI::Lobby *m_lobby { nullptr };
     QList<UI::Chat*> m_chat {};
     QList<UI::Opponent*> m_opponents {};

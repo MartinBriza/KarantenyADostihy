@@ -19,6 +19,7 @@ Item {
             top: parent.top
             margins: 6
         }
+        onClicked: settings.visible = true
     }
 
     ColumnLayout {
@@ -42,6 +43,11 @@ Item {
             TextField {
                 text: client.name
                 onAccepted: client.name = text
+                onFocusChanged: {
+                    if (!focus && acceptableInput) {
+                        client.name = text
+                    }
+                }
             }
             CheckBox {
                 text: "Máš kostku?"
@@ -184,5 +190,10 @@ Item {
                 }
             }
         }
+    }
+
+    Settings {
+        id: settings
+        anchors.centerIn: parent
     }
 }

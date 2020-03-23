@@ -23,13 +23,13 @@ void Client::leave() {
 
 void Client::create(const QString &name) {
     if (name.isEmpty())
-        m_dataStream << Packet(Create{m_name + "'s game"});
+        m_dataStream << Packet(Create{nameGet() + "'s game"});
     else
         m_dataStream << Packet(Create{name});
 }
 
 void Client::sendMessage(const QString &message) {
-    m_dataStream << Packet(Chat { QDateTime().time().toString(), m_name, message, 0 });
+    m_dataStream << Packet(Chat { QDateTime().time().toString(), nameGet(), message, 0 });
 }
 
 void Client::refreshRoster() {
