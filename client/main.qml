@@ -27,4 +27,13 @@ Window {
     ErrorView {
         anchors.centerIn: parent
     }
+
+    Text {
+        text: "Status: " + client.status
+        anchors {
+            top: parent.top
+            right: parent.right
+        }
+    }
+
 }

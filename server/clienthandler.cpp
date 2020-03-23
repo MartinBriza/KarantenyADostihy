@@ -29,6 +29,7 @@ struct Game : public Match {
         : Match(match) {
         for (auto &i : fields) {
             ownerships.insert(&i, 0);
+            upgrades.insert(&i, 0);
         }
     }
     QList<ClientHandler*> clients;
@@ -36,6 +37,7 @@ struct Game : public Match {
         { {"AHOJ"}, 0 }
     }};
     QMap<Field*, int> ownerships;
+    QMap<Field*, int> upgrades;
 };
 
 inline QSet<Game*> games {};
@@ -193,11 +195,11 @@ void ClientHandler::onReadyRead() {
                             if (i.card == card->id) {
                                 if (game->ownerships[card] == 0) {
                                     if (m_position != card->id - 1) {
-                                        m_dataStream << Packet(Packet::ERROR, "Koupit si můžeš jen kartou, na který stojíš");
+                                        m_dataStream << Packet(Packet::ERROR, "Koupit si můžeš jen kartu, na který stojíš");
                                         break;
                                     }
                                     if (m_money < card->price) {
-                                        m_dataStream << Packet(Packet::ERROR, "Na tuhle kartu nemáš dost peněz");
+                                        m_dataStream << Packet(Packet::ERROR, "Na tuhle kartu seš moc velká socka");
                                         break;
                                     }
                                     m_money -= card->price;
@@ -210,7 +212,7 @@ void ClientHandler::onReadyRead() {
                                     sendMessage(game, Chat{QString("<%1> gave %2 to <%3>.").arg(m_clientName).arg(card->name).arg(client->m_clientName)});
                                     updateOwnerships(game);
                                 } else {
-                                    m_dataStream << Packet(Packet::ERROR, "Nemůžeš koupit nebo prodat kartu, kterou vlastní někdo jiný");
+                                    m_dataStream << Packet(Packet::ERROR, "Nemůžeš koupit nebo prodat cizí kusy");
                                     break;
                                 }
                             }

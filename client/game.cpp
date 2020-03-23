@@ -33,7 +33,11 @@ void Client::sendMessage(const QString &message) {
 }
 
 void Client::refreshRoster() {
-    m_dataStream << Packet(Roster {});
+    if (m_socket->state() == QAbstractSocket::ConnectedState)
+        m_dataStream << Packet(Roster {});
+    else if (m_socket->state() == QAbstractSocket::UnconnectedState) {
+        m_socket->connectToHost(settings.value("server", DEFAULT_SERVER).toString(), settings.value("port", DEFAULT_PORT).toInt());
+    }
 }
 
 void Client::setReady(bool val) {

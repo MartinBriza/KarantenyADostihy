@@ -27,6 +27,8 @@ class Client : public QObject {
 
     Q_PROPERTY(QString server READ serverGet WRITE serverSet NOTIFY serverChanged)
     Q_PROPERTY(int port READ portGet WRITE portSet NOTIFY portChanged)
+
+    Q_PROPERTY(QString status READ statusGet NOTIFY statusChanged)
 public:
     enum State {
         ROSTER,
@@ -76,6 +78,16 @@ public:
             emit portChanged();
             m_socket->disconnectFromHost();
             m_socket->connectToHost(settings.value("server", DEFAULT_SERVER).toString(), settings.value("port", DEFAULT_PORT).toInt());
+        }
+    }
+
+    QString statusGet() const {
+        return m_status;
+    }
+    void statusSet(const QString &val) {
+        if (m_status != val) {
+            m_status = val;
+            emit statusChanged();
         }
     }
 
@@ -130,6 +142,19 @@ public slots:
 
 private slots:
     void onSocketStateChanged() {
+        if (m_socket->error() != QAbstractSocket::UnknownSocketError) {
+            statusSet("Error: " + m_socket->errorString());
+        }
+        else {
+            switch (m_socket->state()) {
+            case QAbstractSocket::UnconnectedState: statusSet("Not connected"); break;
+            case QAbstractSocket::HostLookupState: statusSet("Host lookup"); break;
+            case QAbstractSocket::ConnectingState: statusSet("Connecting"); break;
+            case QAbstractSocket::ConnectedState: statusSet("Connected"); break;
+            case QAbstractSocket::ClosingState: statusSet("Closing"); break;
+            }
+        }
+
         if (m_socket->state() == QAbstractSocket::ConnectedState) {
             m_dataStream << Packet(Ahoj{nameGet()});
         }
@@ -240,6 +265,7 @@ signals:
     void thisPlayerIdChanged();
     void serverChanged();
     void portChanged();
+    void statusChanged();
     void serverError(const QString &message);
     void displayCard(const QString &header, const QString &message);
 
@@ -254,6 +280,7 @@ private:
     QTimer m_refreshTimer;
     int m_thisPlayerId { -1 };
     UI::Board *m_board { new UI::Board(this) };
+    QString m_status { "Init" };
 };
 
 #endif // GAME_H
