@@ -252,6 +252,13 @@ void ClientHandler::onReadyRead() {
             }
             break;
         }
+        case Packet::DICE: {
+            auto game = clientGame();
+            auto value = qrand() % 6 + 1;
+            m_dataStream << Packet(Dice { value });
+            sendMessage(game, Chat{ QString("<%1> just threw %2").arg(m_clientName).arg(value) });
+            break;
+        }
         }
     }
 }
@@ -262,6 +269,8 @@ void ClientHandler::onError(QAbstractSocket::SocketError err) {
 }
 
 void ClientHandler::sendMessage(Game *game, Chat message) {
+    if (!game)
+        return;
     for (auto c : game->clients) {
         if (c->m_socket->isWritable())
             c->m_dataStream << Packet(message);

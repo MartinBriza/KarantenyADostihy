@@ -243,6 +243,18 @@ inline QDataStream &operator>>(QDataStream &str, GameState &item) {
     return str;
 }
 
+struct Dice {
+    int value;
+};
+inline QDataStream &operator<<(QDataStream &str, const Dice &item) {
+    str << item.value;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Dice &item) {
+    str >> item.value;
+    return str;
+}
+
 struct Packet {
     enum Type {
         NONE = 0,
@@ -258,6 +270,7 @@ struct Packet {
         GAMESTATE,
         OWNERSHIPS,
         CARD,
+        DICE,
         _LAST_TYPE
     } type { NONE };
     union {
@@ -271,8 +284,9 @@ struct Packet {
         QList<Opponent> opponents;
         Chat chat;
         GameState gameState;
-        Card card;
         QList<Ownership> ownerships;
+        Card card;
+        Dice dice;
     };
     Packet() {}
     Packet(Type type, const QString &text) {
@@ -294,6 +308,7 @@ struct Packet {
     Packet(const GameState &d) : type(GAMESTATE), gameState(d) { }
     Packet(const QList<Ownership> &d) : type(OWNERSHIPS), ownerships(d) { }
     Packet(const Card &d) : type(CARD), card(d) { }
+    Packet(const Dice &d) : type(CARD), dice(d) { }
     void setType(Type type) {
         clear();
         this->type = type;
@@ -335,6 +350,10 @@ struct Packet {
             break;
         case CARD:
             new (&card) Card();
+            break;
+        case DICE:
+            new (&dice) Dice();
+            break;
         }
     }
     void clear() {
@@ -376,6 +395,9 @@ struct Packet {
             break;
         case CARD:
             card.~Card();
+            break;
+        case DICE:
+            dice.~Dice();
             break;
         }
         type = NONE;
@@ -426,6 +448,9 @@ inline QDataStream &operator<<(QDataStream &str, const Packet &item) {
         break;
     case Packet::CARD:
         str << item.card;
+        break;
+    case Packet::DICE:
+        str << item.dice;
         break;
     default:
         str.setStatus(QDataStream::WriteFailed);
@@ -489,6 +514,10 @@ inline QDataStream &operator>>(QDataStream &str, Packet &item) {
     }
     case Packet::CARD: {
         str >> item.card;
+        break;
+    }
+    case Packet::DICE: {
+        str >> item.dice;
         break;
     }
     default: {
