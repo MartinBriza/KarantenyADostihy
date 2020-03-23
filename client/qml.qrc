@@ -7,8 +7,9 @@
         <file>Game.qml</file>
         <file>Roster.qml</file>
         <file>Lobby.qml</file>
-        <file>CardView.qml</file>
+        <file>FieldView.qml</file>
         <file>Chat.qml</file>
         <file>ErrorView.qml</file>
+        <file>CardView.qml</file>
     </qresource>
 </RCC>

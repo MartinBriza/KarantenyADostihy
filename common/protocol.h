@@ -216,6 +216,7 @@ inline QDataStream &operator>>(QDataStream &str, Chat &item) {
 }
 
 struct Card {
+    QString header;
     QString name;
     Effect effect;
     bool operator<(const Card &r) const {
@@ -223,11 +224,11 @@ struct Card {
     }
 };
 inline QDataStream &operator<<(QDataStream &str, const Card &item) {
-    str << item.name << item.effect;
+    str << item.header << item.name << item.effect;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Card &item) {
-    str >> item.name >> item.effect;
+    str >> item.header >> item.name >> item.effect;
     return str;
 }
 

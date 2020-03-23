@@ -46,7 +46,7 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         onClicked: {
-            cardView.show(modelData)
+            fieldView.show(modelData)
         }
     }
 }

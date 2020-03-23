@@ -3,6 +3,13 @@ import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.12
 
 Item {
+    Connections {
+        target: client
+        onDisplayCard: {
+            cardView.show(header, message)
+        }
+    }
+
     Board {
         id: board
         width: Math.min(parent.width, parent.height)
@@ -149,8 +156,11 @@ Item {
             }
         }
     }
+    FieldView {
+        id: fieldView
+        anchors.centerIn: parent
+    }
     CardView {
         id: cardView
-        anchors.centerIn: parent
     }
 }
