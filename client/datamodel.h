@@ -16,7 +16,7 @@ class Player;
 class Board;
 class Game;
 class Roster;
-class Opponent;
+class Player;
 
 inline int lastCardID { 1 };
 
@@ -51,7 +51,7 @@ class Field : public QObject, public ::Field {
     Q_PROPERTY(int price READ priceGet CONSTANT)
     Q_PROPERTY(int upgradePrice READ upgradePriceGet CONSTANT)
     Q_PROPERTY(Type type READ typeGet CONSTANT)
-    Q_PROPERTY(Opponent* owner READ ownerGet NOTIFY ownerChanged)
+    Q_PROPERTY(Player* owner READ ownerGet NOTIFY ownerChanged)
     //Q_PROPERTY(int fee READ feeGet NOTIFY feeChanged)
     Q_PROPERTY(QQmlListProperty<UI::Effect> effects READ effectsGet CONSTANT)
 public:
@@ -73,8 +73,8 @@ public:
     int upgradePriceGet() const;
     QColor colorGet() const;
     Type typeGet() const;
-    UI::Opponent *ownerGet();
-    void ownerSet(UI::Opponent *owner);
+    UI::Player *ownerGet();
+    void ownerSet(UI::Player *owner);
     QQmlListProperty<UI::Effect> effectsGet() {
         return QQmlListProperty<UI::Effect>(this, m_effects);
     }
@@ -84,7 +84,7 @@ signals:
 private:
     QList<Effect*> m_effects;
     int m_upgrade;
-    QPointer<Opponent> m_owner { nullptr };
+    QPointer<Player> m_owner { nullptr };
 };
 
 
@@ -222,7 +222,7 @@ class Ownership : public QObject {
     Q_PROPERTY(QColor color READ colorGet CONSTANT)
     Q_PROPERTY(bool owns READ ownsGet NOTIFY ownsChanged)
 public:
-    Ownership(Opponent *parent = nullptr, int id = 0, QColor color = Qt::white, bool owns = false);
+    Ownership(Player *parent = nullptr, int id = 0, QColor color = Qt::white, bool owns = false);
 
     int idGet() {
         return m_id;
@@ -248,7 +248,7 @@ private:
     bool m_owns { false };
 };
 
-class Opponent : public QObject, public ::Opponent {
+class Player : public QObject, public ::Player {
     Q_OBJECT
     Q_PROPERTY(int id READ idGet CONSTANT)
     Q_PROPERTY(QString name READ nameGet NOTIFY nameChanged)
@@ -261,11 +261,11 @@ class Opponent : public QObject, public ::Opponent {
     Q_PROPERTY(QQmlListProperty<UI::Ownership> owns READ ownsGet CONSTANT)
     Q_PROPERTY(int ownsCount READ ownsCountGet CONSTANT)
 public:
-    Opponent(Client *parent, const ::Opponent &data);
+    Player(Client *parent, const ::Player &data);
 
     Client *client();
 
-    void update(const ::Opponent &data) {
+    void update(const ::Player &data) {
         if (name != data.name) {
             name = data.name;
             emit nameChanged();

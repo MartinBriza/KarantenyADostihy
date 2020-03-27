@@ -42,7 +42,7 @@ void Client::refreshRoster() {
 
 void Client::setReady(bool val) {
     if (m_thisPlayerId > 0) {
-        m_dataStream << Packet(QList<Opponent>{{m_thisPlayerId, {}, {}, -1, -1, {}, val, {}}});
+        m_dataStream << Packet(QList<::Player>{{m_thisPlayerId, {}, {}, -1, -1, {}, val, {}}});
     }
 }
 
@@ -51,7 +51,7 @@ void Client::startGame() {
 }
 
 void Client::move(int id, int position) {
-    m_dataStream << Packet(QList<Opponent>{{id, {}, {}, -1, position, {}, {}, {}}});
+    m_dataStream << Packet(QList<::Player>{{id, {}, {}, -1, position, {}, {}, {}}});
 }
 
 void Client::buy(int id) {
@@ -72,18 +72,18 @@ void Client::drawCard(int type) {
 
 void Client::giveMoney(int amount) {
     int currentMoney = 0;
-    for (auto i : m_opponents) {
+    for (auto i : m_players) {
         if (i->you)
             currentMoney = i->money;
     }
-    m_dataStream << Packet(QList<Opponent>{{m_thisPlayerId, {}, {}, currentMoney - amount, -1, {}, {}, {}}});
+    m_dataStream << Packet(QList<::Player>{{m_thisPlayerId, {}, {}, currentMoney - amount, -1, {}, {}, {}}});
 }
 
 void Client::takeMoney(int amount) {
     int currentMoney = 0;
-    for (auto i : m_opponents) {
+    for (auto i : m_players) {
         if (i->you)
             currentMoney = i->money;
     }
-    m_dataStream << Packet(QList<Opponent>{{m_thisPlayerId, {}, {}, currentMoney + amount, -1, {}, {}, {}}});
+    m_dataStream << Packet(QList<::Player>{{m_thisPlayerId, {}, {}, currentMoney + amount, -1, {}, {}, {}}});
 }

@@ -62,11 +62,11 @@ Field::Type Field::typeGet() const {
     return (Field::Type) type;
 }
 
-Opponent *Field::ownerGet() {
+Player *Field::ownerGet() {
     return m_owner;
 }
 
-void Field::ownerSet(Opponent *owner) {
+void Field::ownerSet(Player *owner) {
     if (m_owner != owner) {
         m_owner = owner;
         emit ownerChanged();
@@ -180,7 +180,7 @@ void Roster::regenerate(const ::Roster &data) {
     emit matchesChanged();
 }
 
-Ownership::Ownership(Opponent *parent, int id, QColor color, bool owns)
+Ownership::Ownership(Player *parent, int id, QColor color, bool owns)
     : QObject(parent)
     , m_id(id)
     , m_color(color)
@@ -188,9 +188,9 @@ Ownership::Ownership(Opponent *parent, int id, QColor color, bool owns)
 {
 }
 
-Opponent::Opponent(Client *parent, const ::Opponent &data)
+Player::Player(Client *parent, const ::Player &data)
     : QObject(parent)
-    , ::Opponent(data)
+    , ::Player(data)
 {
     for (auto &i : client()->boardGet()->fieldList()) {
         if (i->typeGet() == Field::TRAINER) {
@@ -209,7 +209,7 @@ Opponent::Opponent(Client *parent, const ::Opponent &data)
     }
 }
 
-Client *Opponent::client() {
+Client *Player::client() {
     return qobject_cast<Client*>(parent());
 }
 

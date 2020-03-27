@@ -124,13 +124,13 @@ void ClientHandler::onReadyRead() {
             }
             break;
         }
-        case Packet::OPPONENTS: {
+        case Packet::PLAYERS: {
             auto game = clientGame();
             if (!game) {
                 return;
             }
             bool changed = false;
-            for (auto i : p.opponents) {
+            for (auto i : p.players) {
                 for (auto c : game->clients) {
                     if (c->m_clientId == i.id) {
                         if (!i.name.isEmpty()) {
@@ -342,10 +342,10 @@ void ClientHandler::updateOpponents(Game *game) {
         position++;
     }
     for (auto client : game->clients) {
-        QList<Opponent> opponents;
+        QList<Player> opponents;
         bool first = true;
         for (auto i : game->clients) {
-            Opponent o;
+            Player o;
             o.id = i->m_clientId;
             o.name = i->m_clientName;
             o.color = i->m_clientColor;

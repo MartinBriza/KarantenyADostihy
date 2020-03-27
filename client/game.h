@@ -21,7 +21,7 @@ class Client : public QObject {
     Q_PROPERTY(State state READ stateGet NOTIFY stateChanged)
     Q_PROPERTY(UI::Lobby *lobby READ lobbyGet NOTIFY lobbyChanged)
     Q_PROPERTY(QQmlListProperty<UI::Chat> chat READ chatGet NOTIFY chatChanged)
-    Q_PROPERTY(QQmlListProperty<UI::Opponent> opponents READ opponentsGet NOTIFY opponentsChanged)
+    Q_PROPERTY(QQmlListProperty<UI::Player> players READ playersGet NOTIFY playersChanged)
     Q_PROPERTY(int thisPlayerId READ thisPlayerId NOTIFY thisPlayerIdChanged)
     Q_PROPERTY(UI::Board *board READ boardGet CONSTANT)
 
@@ -120,8 +120,8 @@ public:
     QQmlListProperty<UI::Chat> chatGet() {
         return QQmlListProperty<UI::Chat>(this, m_chat);
     }
-    QQmlListProperty<UI::Opponent> opponentsGet() {
-        return QQmlListProperty<UI::Opponent>(this, m_opponents);
+    QQmlListProperty<UI::Player> playersGet() {
+        return QQmlListProperty<UI::Player>(this, m_players);
     }
 
     static QString randomName(int count = 8);
@@ -191,27 +191,27 @@ private slots:
                 }
                 break;
             }
-            case Packet::OPPONENTS: {
+            case Packet::PLAYERS: {
                 QSet<int> oldIDs;
                 QSet<int> newIDs;
-                for (auto i : m_opponents)
+                for (auto i : m_players)
                     oldIDs.insert(i->id);
-                for (auto i : p.opponents)
+                for (auto i : p.players)
                     newIDs.insert(i.id);
                 if (newIDs != oldIDs) {
-                    m_opponents.clear();
-                    for (auto &i : p.opponents) {
-                        m_opponents.append(new UI::Opponent(this, i));
+                    m_players.clear();
+                    for (auto &i : p.players) {
+                        m_players.append(new UI::Player(this, i));
                         if (i.you && m_thisPlayerId != i.id) {
                             m_thisPlayerId = i.id;
                             emit thisPlayerIdChanged();
                         }
                     }
-                    emit opponentsChanged();
+                    emit playersChanged();
                 }
                 else {
-                    for (auto old : m_opponents) {
-                        for (auto refresh : p.opponents) {
+                    for (auto old : m_players) {
+                        for (auto refresh : p.players) {
                             if (old->id == refresh.id) {
                                 old->update(refresh);
                             }
@@ -233,16 +233,16 @@ private slots:
                 for (auto ownership : p.ownerships) {
                     for (auto field : m_board->fieldList()) {
                         if (ownership.card == field->id) {
-                            for (auto opponent : m_opponents) {
-                                if (ownership.player == opponent->id) {
-                                    field->ownerSet(opponent);
+                            for (auto player : m_players) {
+                                if (ownership.player == player->id) {
+                                    field->ownerSet(player);
                                 }
                             }
                         }
                     }
                 }
-                for (auto opponent : m_opponents) {
-                    opponent->updateOwnerships(p.ownerships);
+                for (auto player : m_players) {
+                    player->updateOwnerships(p.ownerships);
                 }
                 break;
             }
@@ -261,7 +261,7 @@ signals:
     void stateChanged();
     void lobbyChanged();
     void chatChanged();
-    void opponentsChanged();
+    void playersChanged();
     void thisPlayerIdChanged();
     void serverChanged();
     void portChanged();
@@ -276,7 +276,7 @@ private:
     UI::Roster *m_roster { nullptr };
     UI::Lobby *m_lobby { nullptr };
     QList<UI::Chat*> m_chat {};
-    QList<UI::Opponent*> m_opponents {};
+    QList<UI::Player*> m_players {};
     QTimer m_refreshTimer;
     int m_thisPlayerId { -1 };
     UI::Board *m_board { new UI::Board(this) };

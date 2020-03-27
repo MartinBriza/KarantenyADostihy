@@ -170,7 +170,7 @@ inline QDataStream &operator>>(QDataStream &str, Entered &item) {
     return str;
 }
 
-struct Opponent {
+struct Player {
     int id;
     QString name;
     QColor color;
@@ -180,11 +180,11 @@ struct Opponent {
     bool ready;
     bool you;
 };
-inline QDataStream &operator<<(QDataStream &str, const Opponent &item) {
+inline QDataStream &operator<<(QDataStream &str, const Player &item) {
     str << item.id << item.name << item.color << item.money << item.leader << item.ready << item.you << item.position;
     return str;
 }
-inline QDataStream &operator>>(QDataStream &str, Opponent &item) {
+inline QDataStream &operator>>(QDataStream &str, Player &item) {
     str >> item.id >> item.name >> item.color >> item.money >> item.leader >> item.ready >> item.you >> item.position;
     return str;
 }
@@ -266,7 +266,7 @@ struct Packet {
         JOIN,
         CREATE,
         ENTERED,
-        OPPONENTS,
+        PLAYERS,
         CHAT,
         GAMESTATE,
         OWNERSHIPS,
@@ -282,7 +282,7 @@ struct Packet {
         Join join;
         Create create;
         Entered entered;
-        QList<Opponent> opponents;
+        QList<Player> players;
         Chat chat;
         GameState gameState;
         QList<Ownership> ownerships;
@@ -305,7 +305,7 @@ struct Packet {
     Packet(const Create &d) : type(CREATE), create(d) { }
     Packet(const Entered &d) : type(ENTERED), entered(d) { }
     Packet(const Chat &d) : type(CHAT), chat(d) { }
-    Packet(const QList<Opponent> &d) : type(OPPONENTS), opponents(d) { }
+    Packet(const QList<Player> &d) : type(PLAYERS), players(d) { }
     Packet(const GameState &d) : type(GAMESTATE), gameState(d) { }
     Packet(const QList<Ownership> &d) : type(OWNERSHIPS), ownerships(d) { }
     Packet(const Card &d) : type(CARD), card(d) { }
@@ -337,8 +337,8 @@ struct Packet {
         case ENTERED:
             new (&entered) Entered();
             break;
-        case OPPONENTS:
-            new (&opponents) QList<Opponent>();
+        case PLAYERS:
+            new (&players) QList<Player>();
             break;
         case CHAT:
             new (&chat) Chat();
@@ -382,8 +382,8 @@ struct Packet {
         case ENTERED:
             entered.~Entered();
             break;
-        case OPPONENTS:
-            opponents.~QList<Opponent>();
+        case PLAYERS:
+            players.~QList<Player>();
             break;
         case CHAT:
             chat.~Chat();
@@ -435,8 +435,8 @@ inline QDataStream &operator<<(QDataStream &str, const Packet &item) {
     case Packet::ENTERED:
         str << item.entered;
         break;
-    case Packet::OPPONENTS:
-        str << item.opponents;
+    case Packet::PLAYERS:
+        str << item.players;
         break;
     case Packet::CHAT:
         str << item.chat;
@@ -497,8 +497,8 @@ inline QDataStream &operator>>(QDataStream &str, Packet &item) {
         str >> item.entered;
         break;
     }
-    case Packet::OPPONENTS: {
-        str >> item.opponents;
+    case Packet::PLAYERS: {
+        str >> item.players;
         break;
     }
     case Packet::CHAT: {

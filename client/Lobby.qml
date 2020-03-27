@@ -40,7 +40,7 @@ Item {
         Flow {
             Layout.fillWidth: true
             Repeater {
-                model: client.opponents
+                model: client.players
                 Rectangle {
                     width: childrenRect.width + 18
                     height: childrenRect.height + 18

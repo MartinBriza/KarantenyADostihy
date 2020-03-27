@@ -14,7 +14,7 @@ Item {
         width: Math.min(parent.width, parent.height)
         height: parent.height
         Repeater {
-            model: client.opponents
+            model: client.players
             delegate: Player {
                 model: modelData
 
@@ -65,7 +65,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: 6
                 Repeater {
-                    model: client.opponents
+                    model: client.players
                     Rectangle {
                         id: opponentDelegate
                         property variant player: modelData

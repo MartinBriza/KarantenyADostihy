@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     qmlRegisterUncreatableType<UI::Match>("monopoly", 1, 0, "MatchData", "Created by core");
     qmlRegisterUncreatableType<UI::Lobby>("monopoly", 1, 0, "LobbyData", "Created by core");
     qmlRegisterUncreatableType<UI::Chat>("monopoly", 1, 0, "ChatData", "Created by core");
-    qmlRegisterUncreatableType<UI::Opponent>("monopoly", 1, 0, "OpponentData", "Created by core");
+    qmlRegisterUncreatableType<UI::Player>("monopoly", 1, 0, "PlayerData", "Created by core");
     qmlRegisterUncreatableType<UI::Ownership>("monopoly", 1, 0, "OwnershipData", "Created by core");
 
     QQmlApplicationEngine engine;
