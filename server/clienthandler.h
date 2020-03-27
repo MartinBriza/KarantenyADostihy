@@ -6,24 +6,43 @@
 #include <QTcpSocket>
 #include <QList>
 
-class Game;
+struct Game;
+struct PlayerData;
 
 class ClientHandler : public QObject {
     Q_OBJECT
 public:
-    enum State {
-        PRE_AHOJ,
-        AHOJ_SENT,
-        AHOJ_RECEIVED,
-        ROSTER_SENT,
-    };
+    friend struct PlayerData; //I'm lazy
+
     ClientHandler(QObject *parent = nullptr, QTcpSocket *socket = nullptr);
     virtual ~ClientHandler();
+
+    void setPlayer(PlayerData *player);
+
 private slots:
     void onSocketStateChanged();
     void onReadyRead();
-    void onError(QAbstractSocket::SocketError err);
+    void onSocketError(QAbstractSocket::SocketError err);
 private:
+    // packet handlers
+    void onError(const QString &err);
+    void onAhoj(const Ahoj &ahoj);
+    void onMatch(const Match &match);
+    void onRoster(const Roster &roster);
+    void onJoin(const Join &join);
+    void onCreate(const Create &create);
+    void onEntered(const Entered &entered);
+    void onPlayers(const QList<Player> &players);
+    void onChat(const Chat &chat);
+    void onGameState(const GameState &gameState);
+    void onOwnerships(const QList<Ownership> &ownerships);
+    void onCard(const Card &card);
+    void onDice(const Dice &dice);
+
+    void onBullshit();
+
+
+    // generic methods
     void sendMessage(Game *game, Chat message);
     Game *clientGame();
     void joinGame(int id, const QString &password);
@@ -34,17 +53,10 @@ private:
 
     void handleEffect(Game *game, const Effect &effect);
 
-    inline static int lastPlayerID { 1 };
-
     QTcpSocket *m_socket;
     QDataStream m_dataStream;
-    State m_state { PRE_AHOJ };
-    QString m_clientName {};
-    bool m_clientReady { false };
-    int m_clientId { lastPlayerID++ };
-    int m_money { 30000 };
-    QColor m_clientColor { Qt::red };
-    int m_position { 0 };
+    PlayerData *m_player;
+    QString m_name;
 };
 
 #endif // CLIENTHANDLER_H

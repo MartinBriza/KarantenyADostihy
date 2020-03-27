@@ -24,6 +24,19 @@ inline QVector<Card> financeCards {
     #include "../def/finance.def"
 };
 
+
+static int lastPlayerID { 1 };
+
+struct PlayerData : public Player {
+    PlayerData(ClientHandler *client, int money = 30000) : Player { lastPlayerID++ }, client(client)
+    {
+        Player::money = money;
+        Player::name = client->m_name;
+        client->setPlayer(this);
+    }
+    ClientHandler *client { nullptr };
+};
+
 struct Game : public Match {
     Game(const Match& match)
         : Match(match) {
@@ -32,7 +45,7 @@ struct Game : public Match {
             upgrades.insert(&i, 0);
         }
     }
-    QList<ClientHandler*> clients;
+    QList<PlayerData*> clients;
     GameState state {{
         { {"AHOJ"}, 0 }
     }};
@@ -49,14 +62,17 @@ ClientHandler::ClientHandler(QObject *parent, QTcpSocket *socket)
     , m_dataStream(m_socket)
 {
     connect(m_socket, &QTcpSocket::readyRead, this, &ClientHandler::onReadyRead);
-    connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &ClientHandler::onError);
+    connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &ClientHandler::onSocketError);
     connect(m_socket, &QTcpSocket::stateChanged, this, &ClientHandler::onSocketStateChanged);
     m_dataStream << Packet{Ahoj{}};
-    m_state = AHOJ_SENT;
 }
 
 ClientHandler::~ClientHandler() {
 
+}
+
+void ClientHandler::setPlayer(PlayerData *player) {
+    m_player = player;
 }
 
 void ClientHandler::onSocketStateChanged() {
@@ -76,205 +92,224 @@ void ClientHandler::onReadyRead() {
         qCritical() << "GOT GARBAGE:" << m_socket->readAll();
         return;
     }
-    if (p.type == Packet::AHOJ) {
-        m_state = AHOJ_RECEIVED;
-        m_clientName = p.ahoj.ahoj;
-        Roster roster;
-        for (auto i : games) {
-            roster.matches.append(*i);
-        }
-        m_dataStream << Packet(roster);
-    }
-    else if (m_clientName.isEmpty()) {
-        m_dataStream << Packet(Packet::ERROR, "You should've sent AHOJ");
-        m_socket->flush();
-        m_socket->close();
-        deleteLater();
-    }
     else {
         switch (p.type) {
-        case Packet::ROSTER: {
-            Roster roster;
-            for (auto &i : games) {
-                roster.matches.append(*i);
-            }
-            m_dataStream << Packet(roster);
-            break;
-        }
-        case Packet::CREATE: {
-            auto gameIt = games.insert(new Game(Match{lastGameID++, p.create.password, p.create.name, m_clientName, 0, p.create.capacity}));
-            auto game = *gameIt;
-            joinGame(game->id, p.create.password);
-            break;
-        }
-        case Packet::JOIN: {
-            if (p.join.id < 0) {
-                leaveGame();
-            } else {
-                joinGame(p.join.id, p.join.password);
-            }
-            break;
-        }
-        case Packet::CHAT: {
-            for (auto *i : games) {
-                // another great design decision
-                if (i->clients.contains(this)) {
-                    sendMessage(i, Chat{ p.chat.time, p.chat.from, p.chat.message, 0 });
-                }
-            }
-            break;
-        }
-        case Packet::PLAYERS: {
-            auto game = clientGame();
-            if (!game) {
-                return;
-            }
-            bool changed = false;
-            for (auto i : p.players) {
-                for (auto c : game->clients) {
-                    if (c->m_clientId == i.id) {
-                        if (!i.name.isEmpty()) {
-                            sendMessage(game, Chat{QString("<%1> changed the name of <%2> to \"%3\".").arg(m_clientName).arg(c->m_clientName).arg(i.name)});
-                            c->m_clientName = i.name;
-                            changed = true;
-                        }
-                        if (i.color.isValid()) {
-                            sendMessage(game, Chat{QString("<%1> changed the color of <%2> to \"%3\".").arg(m_clientName).arg(c->m_clientName).arg(i.color.name())});
-                            c->m_clientColor = i.color;
-                            changed = true;
-                        }
-                        if (i.money >= 0) {
-                            if (m_clientId == c->m_clientId) {
-                                int diff = i.money - c->m_money;
-                                if (diff > 0)
-                                    sendMessage(game, Chat{QString("<%1> took %2 from the bank").arg(m_clientName).arg(diff)});
-                                else
-                                    sendMessage(game, Chat{QString("<%1> gave %2 to the bank").arg(m_clientName).arg(diff)});
-                            }
-                            else {
-                                sendMessage(game, Chat{QString("<%1> changed the money of <%2> to \"%3\" from \"%4\".").arg(m_clientName).arg(c->m_clientName).arg(i.money).arg(c->m_money)});
-                            }
-                            c->m_money = i.money;
-                            changed = true;
-                        }
-                        if (i.position >= 0) {
-                            sendMessage(game, Chat{QString("<%1> changed the position of <%2> to \"%3\" from \"%4\".").arg(m_clientName).arg(c->m_clientName).arg(i.position % 40).arg(c->m_position)});
-                            c->m_position = i.position % 40;
-                            changed = true;
-                        }
-                        if (c->m_clientReady != i.ready) {
-                            sendMessage(game, Chat{QString("<%1> is now %2 ready.").arg(m_clientName).arg(i.ready ? "" : "not")});
-                            c->m_clientReady = i.ready;
-                            changed = true;
-                        }
-                    }
-                }
-            }
-            if (changed)
-                updateOpponents(game);
-            break;
-        }
-        case Packet::GAMESTATE: {
-            auto game = clientGame();
-            if (game) {
-                for (auto client : game->clients) {
-                    client->m_dataStream << Packet(game->state);
-                }
-                updateOwnerships(game);
-            }
-            break;
-        }
-        case Packet::OWNERSHIPS: {
-            auto game = clientGame();
-            if (!game)
-                return;
-            for (auto i : p.ownerships) {
-                for (auto client : game->clients) {
-                    if (i.player == client->m_clientId) {
-                        for (auto card : game->ownerships.keys()) {
-                            if (i.card == card->id) {
-                                if (game->ownerships[card] == 0) {
-                                    if (m_position != card->id - 1) {
-                                        m_dataStream << Packet(Packet::ERROR, "Koupit si můžeš jen kartu, na který stojíš");
-                                        break;
-                                    }
-                                    if (m_money < card->price) {
-                                        m_dataStream << Packet(Packet::ERROR, "Na tuhle kartu seš moc velká socka");
-                                        break;
-                                    }
-                                    m_money -= card->price;
-                                    game->ownerships[card] = i.player;
-                                    sendMessage(game, Chat{QString("<%1> bought %2 for %3.").arg(m_clientName).arg(card->name).arg(card->price)});
-                                    updateOwnerships(game);
-                                    updateOpponents(game);
-                                } else if (game->ownerships[card] == m_clientId) {
-                                    game->ownerships[card] = i.player;
-                                    sendMessage(game, Chat{QString("<%1> gave %2 to <%3>.").arg(m_clientName).arg(card->name).arg(client->m_clientName)});
-                                    updateOwnerships(game);
-                                } else {
-                                    m_dataStream << Packet(Packet::ERROR, "Nemůžeš koupit nebo prodat cizí kusy");
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            break;
-        }
-        case Packet::CARD: {
-            auto game = clientGame();
-            if (p.card.name == "chance") {
-                handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_CHANCE});
-            }
-            else if (p.card.name == "finance") {
-                handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_FINANCE});
-            }
-            else if (m_position >= 0 && m_position < fields.count()) {
-                if (fields[m_position].effects.count() > 0 && fields[m_position].effects.first().action == Effect::DRAW_CHANCE) {
-                    handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_CHANCE});
-                }
-                else if (fields[m_position].effects.count() > 0 && fields[m_position].effects.first().action == Effect::DRAW_FINANCE) {
-                    handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_FINANCE});
-                }
-                else {
-                    m_dataStream << Packet(Packet::ERROR, "Hele, nevim, co tam nacvičuješ, ale o karty se takhle neříká");
-                }
-            }
-            else {
-                m_dataStream << Packet(Packet::ERROR, "Hele, nevim, co tam nacvičuješ, ale o karty se takhle neříká");
-            }
-            break;
-        }
-        case Packet::DICE: {
-            auto game = clientGame();
-            auto value = qrand() % 6 + 1;
-            m_dataStream << Packet(Dice { value });
-            sendMessage(game, Chat{ QString("<%1> just threw %2").arg(m_clientName).arg(value) });
-            break;
-        }
+        case Packet::AHOJ: onAhoj(p.ahoj); break;
+        case Packet::ROSTER: onRoster(p.roster); break;
+        case Packet::CREATE: onCreate(p.create); break;
+        case Packet::JOIN: onJoin(p.join); break;
+        case Packet::CHAT: onChat(p.chat); break;
+        case Packet::PLAYERS: onPlayers(p.players); break;
+        case Packet::GAMESTATE: onGameState(p.gameState); break;
+        case Packet::OWNERSHIPS: onOwnerships(p.ownerships); break;
+        case Packet::CARD: onCard(p.card); break;
+        case Packet::DICE: onDice(p.dice); break;
         }
     }
 }
 
-void ClientHandler::onError(QAbstractSocket::SocketError err) {
+void ClientHandler::onSocketError(QAbstractSocket::SocketError err) {
     leaveGame();
     deleteLater();
+}
+
+void ClientHandler::onError(const QString &err) {
+
+}
+
+void ClientHandler::onAhoj(const Ahoj &ahoj) {
+    m_name = ahoj.ahoj;
+    Roster roster;
+    for (auto i : games) {
+        roster.matches.append(*i);
+    }
+    m_dataStream << Packet(roster);
+}
+
+void ClientHandler::onMatch(const Match &match) {
+
+}
+
+void ClientHandler::onRoster(const Roster &roster) {
+    Roster r;
+    for (auto &i : games) {
+        r.matches.append(*i);
+    }
+    m_dataStream << Packet(r);
+}
+
+void ClientHandler::onJoin(const Join &join) {
+    if (join.id < 0) {
+        leaveGame();
+    } else {
+        joinGame(join.id, join.password);
+    }
+}
+
+void ClientHandler::onCreate(const Create &create) {
+    auto gameIt = games.insert(new Game(Match{lastGameID++, create.password, create.name, m_name, 0, create.capacity}));
+    auto game = *gameIt;
+    joinGame(game->id, create.password);
+}
+
+void ClientHandler::onEntered(const Entered &entered) {
+
+}
+
+void ClientHandler::onPlayers(const QList<Player> &players) {
+    auto game = clientGame();
+    if (!game) {
+        return;
+    }
+    bool changed = false;
+    for (auto i : players) {
+        for (auto c : game->clients) {
+            if (c->id == i.id) {
+                if (!i.name.isEmpty()) {
+                    sendMessage(game, Chat{QString("<%1> changed the name of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.name)});
+                    m_name = c->name;
+                    c->name = i.name;
+                    changed = true;
+                }
+                if (i.color.isValid()) {
+                    sendMessage(game, Chat{QString("<%1> changed the color of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.color.name())});
+                    c->color = i.color;
+                    changed = true;
+                }
+                if (i.money >= 0) {
+                    if (m_player->id == c->id) {
+                        int diff = i.money - c->money;
+                        if (diff > 0)
+                            sendMessage(game, Chat{QString("<%1> took %2 from the bank").arg(m_player->name).arg(diff)});
+                        else
+                            sendMessage(game, Chat{QString("<%1> gave %2 to the bank").arg(m_player->name).arg(diff)});
+                    }
+                    else {
+                        sendMessage(game, Chat{QString("<%1> changed the money of <%2> to \"%3\" from \"%4\".").arg(m_player->name).arg(c->name).arg(i.money).arg(c->money)});
+                    }
+                    c->money = i.money;
+                    changed = true;
+                }
+                if (i.position >= 0) {
+                    sendMessage(game, Chat{QString("<%1> changed the position of <%2> to \"%3\" from \"%4\".").arg(m_player->name).arg(c->name).arg(i.position % 40).arg(c->position)});
+                    c->position = i.position % 40;
+                    changed = true;
+                }
+                if (c->ready != i.ready) {
+                    sendMessage(game, Chat{QString("<%1> is now %2 ready.").arg(m_player->name).arg(i.ready ? "" : "not")});
+                    c->ready = i.ready;
+                    changed = true;
+                }
+            }
+        }
+    }
+    if (changed)
+        updateOpponents(game);
+}
+
+void ClientHandler::onChat(const Chat &chat) {
+    auto game = clientGame();
+    if (game)
+        sendMessage(game, Chat{ chat.time, chat.from, chat.message, 0 });
+}
+
+void ClientHandler::onGameState(const GameState &gameState) {
+    auto game = clientGame();
+    if (game) {
+        for (auto client : game->clients) {
+            client->client->m_dataStream << Packet(game->state);
+        }
+        updateOwnerships(game);
+    }
+}
+
+void ClientHandler::onOwnerships(const QList<Ownership> &ownerships) {
+    auto game = clientGame();
+    if (!game)
+        return;
+    for (auto i : ownerships) {
+        for (auto client : game->clients) {
+            if (i.player == client->id) {
+                for (auto card : game->ownerships.keys()) {
+                    if (i.card == card->id) {
+                        if (game->ownerships[card] == 0) {
+                            if (m_player->position != card->id - 1) {
+                                m_dataStream << Packet(Packet::ERROR, "Koupit si můžeš jen kartu, na který stojíš");
+                                break;
+                            }
+                            if (m_player->money < card->price) {
+                                m_dataStream << Packet(Packet::ERROR, "Na tuhle kartu seš moc velká socka");
+                                break;
+                            }
+                            m_player->money -= card->price;
+                            game->ownerships[card] = i.player;
+                            sendMessage(game, Chat{QString("<%1> bought %2 for %3.").arg(m_player->name).arg(card->name).arg(card->price)});
+                            updateOwnerships(game);
+                            updateOpponents(game);
+                        } else if (game->ownerships[card] == m_player->id) {
+                            game->ownerships[card] = i.player;
+                            sendMessage(game, Chat{QString("<%1> gave %2 to <%3>.").arg(m_player->name).arg(card->name).arg(client->name)});
+                            updateOwnerships(game);
+                        } else {
+                            m_dataStream << Packet(Packet::ERROR, "Nemůžeš koupit nebo prodat cizí kusy");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void ClientHandler::onCard(const Card &card) {
+    auto game = clientGame();
+    if (card.name == "chance") {
+        handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_CHANCE});
+    }
+    else if (card.name == "finance") {
+        handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_FINANCE});
+    }
+    else if (m_player->position >= 0 && m_player->position < fields.count()) {
+        if (fields[m_player->position].effects.count() > 0 && fields[m_player->position].effects.first().action == Effect::DRAW_CHANCE) {
+            handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_CHANCE});
+        }
+        else if (fields[m_player->position].effects.count() > 0 && fields[m_player->position].effects.first().action == Effect::DRAW_FINANCE) {
+            handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_FINANCE});
+        }
+        else {
+            m_dataStream << Packet(Packet::ERROR, "Hele, nevim, co tam nacvičuješ, ale o karty se takhle neříká");
+        }
+    }
+    else {
+        m_dataStream << Packet(Packet::ERROR, "Hele, nevim, co tam nacvičuješ, ale o karty se takhle neříká");
+    }
+}
+
+void ClientHandler::onDice(const Dice &dice) {
+    auto game = clientGame();
+    auto value = qrand() % 6 + 1;
+    m_dataStream << Packet(Dice { value });
+    sendMessage(game, Chat{ QString("<%1> just threw %2").arg(m_player->name).arg(value) });
+}
+
+void ClientHandler::onBullshit() {
+    m_dataStream << Packet(Packet::ERROR, "Tvůj klient posílá kraviny.");
 }
 
 void ClientHandler::sendMessage(Game *game, Chat message) {
     if (!game)
         return;
     for (auto c : game->clients) {
-        if (c->m_socket->isWritable())
-            c->m_dataStream << Packet(message);
+        if (c->client->m_socket->isWritable())
+            c->client->m_dataStream << Packet(message);
     }
 }
 
 Game *ClientHandler::clientGame() {
     for (auto i : games) {
-        if (i->clients.contains(this))
-            return i;
+        for (auto c : i->clients)
+            if (c->client == this)
+                return i;
     }
     return nullptr;
 }
@@ -282,8 +317,13 @@ Game *ClientHandler::clientGame() {
 void ClientHandler::joinGame(int id, const QString &password) {
     for (auto game : games) {
         if (game->id == id) {
-            if (game->clients.contains(this))
-                return;
+            bool contains = false;
+            for (auto i : game->clients) {
+                if (i->client == this) {
+                    contains = true;
+                    return;
+                }
+            }
             if (game->clients.count() >= game->maximumPlayers) {
                 m_dataStream << Packet(Packet::ERROR, "This game is full");
                 return;
@@ -293,10 +333,10 @@ void ClientHandler::joinGame(int id, const QString &password) {
                 return;
             }
             leaveGame(false);
-            game->clients.append(this);
+            game->clients.append(new PlayerData(this));
             game->players++;
             m_dataStream << Packet(Entered{ game->id, game->name });
-            sendMessage(game, Chat{QString("<%1> joined this game.").arg(m_clientName)});
+            sendMessage(game, Chat{QString("<%1> joined this game.").arg(m_player->name)});
             updateOpponents(game);
         }
     }
@@ -305,14 +345,16 @@ void ClientHandler::joinGame(int id, const QString &password) {
 void ClientHandler::leaveGame(bool notify) {
     m_dataStream << Packet(Entered{ -1, {} });
     for (auto game : games) {
-        if (game->clients.contains(this)) {
-            game->clients.removeOne(this);
-            game->players--;
-            sendMessage(game, Chat{QString("<%1> left this game.").arg(m_clientName)});
-            if (notify)
-                updateOpponents(game);
-            handleEmptyGame(game);
-            return;
+        for (auto i : game->clients) {
+            if (i->client == this) {
+                game->clients.removeOne(i);
+                game->players--;
+                sendMessage(game, Chat{QString("<%1> left this game.").arg(m_player->name)});
+                if (notify)
+                    updateOpponents(game);
+                handleEmptyGame(game);
+                return;
+            }
         }
     }
 }
@@ -330,7 +372,7 @@ void ClientHandler::updateOwnerships(Game *game) {
         data.append({game->ownerships[i], i->id});
     }
     for (auto i : game->clients) {
-        i->m_dataStream << Packet(data);
+        i->client->m_dataStream << Packet(data);
     }
 }
 
@@ -338,7 +380,7 @@ void ClientHandler::updateOpponents(Game *game) {
     // totally clean
     int position = 0;
     for (auto client : game->clients) {
-        client->m_clientColor = colors[position % 8];
+        client->color = colors[position % 8];
         position++;
     }
     for (auto client : game->clients) {
@@ -346,33 +388,33 @@ void ClientHandler::updateOpponents(Game *game) {
         bool first = true;
         for (auto i : game->clients) {
             Player o;
-            o.id = i->m_clientId;
-            o.name = i->m_clientName;
-            o.color = i->m_clientColor;
-            o.ready = i->m_clientReady;
+            o.id = i->id;
+            o.name = i->name;
+            o.color = i->color;
+            o.ready = i->ready;
             o.you = i == client;
-            o.position = i->m_position;
-            o.money = i->m_money;
+            o.position = i->position;
+            o.money = i->money;
             o.leader = first;
             first = false;
             opponents.append(o);
         }
-        client->m_dataStream << Packet(opponents);
+        client->client->m_dataStream << Packet(opponents);
     }
 }
 
 void ClientHandler::handleEffect(Game *game, const Effect &effect) {
     if (!game)
         return;
-    QList<ClientHandler*> clients;
+    QList<PlayerData*> clients;
 
     switch (effect.target) {
     case Effect::PLAYER:
-        clients.append(this);
+        clients.append(m_player);
         break;
     case Effect::OTHER_PLAYERS:
         for (auto i : game->clients) {
-            if (i != this)
+            if (i->client != this)
                 clients.append(i);
         }
         break;
@@ -388,43 +430,43 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
         break;
     case Effect::DRAW_CHANCE: {
         auto &c = chanceCards[qrand() % chanceCards.count()];
-        sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Náhoda - \"%2\"").arg(m_clientName).arg(c.name)});
+        sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Náhoda - \"%2\"").arg(m_player->name).arg(c.name)});
         handleEffect(game, c.effect);
         m_dataStream << Packet(c);
         break;
     }
     case Effect::DRAW_FINANCE: {
         auto &c = financeCards[qrand() % financeCards.count()];
-        sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Finance - \"%2\"").arg(m_clientName).arg(c.name)});
+        sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Finance - \"%2\"").arg(m_player->name).arg(c.name)});
         handleEffect(game, c.effect);
         m_dataStream << Packet(c);
         break;
     }
     case Effect::GAIN:
         for (auto i : clients)
-            i->m_money += effect.amount;
+            i->money += effect.amount;
         updateOpponents(game);
         break;
     case Effect::FEE:
         for (auto i : clients)
-            i->m_money -= effect.amount;
+            i->money -= effect.amount;
         updateOpponents(game);
         break;
     case Effect::TRANSFER: {
         int total = 0;
         for (auto i : clients) {
-            i->m_money -= effect.amount;
+            i->money -= effect.amount;
             total += effect.amount;
         }
-        m_money += total;
+        m_player->money += total;
         updateOpponents(game);
     }
     case Effect::MOVE_STEPS: {
         for (auto i : clients) {
-            i->m_position += effect.amount;
-            if (i->m_position < 0)
-                i->m_position += 40;
-            i->m_position %= 40;
+            i->position += effect.amount;
+            if (i->position < 0)
+                i->position += 40;
+            i->position %= 40;
         }
         updateOpponents(game);
     }

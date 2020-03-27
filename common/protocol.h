@@ -171,14 +171,14 @@ inline QDataStream &operator>>(QDataStream &str, Entered &item) {
 }
 
 struct Player {
-    int id;
-    QString name;
-    QColor color;
-    int money;
-    int position;
-    bool leader;
-    bool ready;
-    bool you;
+    int id { 0 };
+    QString name { "" };
+    QColor color { Qt::red };
+    int money { 0 };
+    int position { 0 };
+    bool leader { false };
+    bool ready { false };
+    bool you { false };
 };
 inline QDataStream &operator<<(QDataStream &str, const Player &item) {
     str << item.id << item.name << item.color << item.money << item.leader << item.ready << item.you << item.position;
