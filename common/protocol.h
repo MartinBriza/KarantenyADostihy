@@ -79,13 +79,14 @@ inline QDataStream &operator>>(QDataStream &str, Field &item) {
 struct Ownership {
     int player;
     int card;
+    int upgradeLevel;
 };
 inline QDataStream &operator<<(QDataStream &str, const Ownership &item) {
-    str << item.player << item.card;
+    str << item.player << item.card << item.upgradeLevel;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Ownership &item) {
-    str >> item.player >> item.card;
+    str >> item.player >> item.card >> item.upgradeLevel;
     return str;
 }
 

@@ -43,7 +43,8 @@ private:
 
 
     // generic methods
-    void sendMessage(Game *game, Chat message);
+    void sendMessage(Game *game, const Chat &message);
+    void sendMessage(Game *game, const QString &message);
     Game *clientGame();
     void joinGame(int id, const QString &password);
     void leaveGame(bool notify = true);
