@@ -45,12 +45,13 @@ struct Game : public Match {
             upgrades.insert(&i, 0);
         }
     }
+    bool started { false };
     QList<PlayerData*> clients;
     GameState state {{
         { {"AHOJ"}, 0 }
     }};
-    QMap<Field*, int> ownerships;
-    QMap<Field*, int> upgrades;
+    QMap<const Field*, int> ownerships;
+    QMap<const Field*, int> upgrades;
 
     PlayerData *playerById(int id) {
         for (auto i : clients) {
@@ -82,13 +83,29 @@ struct Game : public Match {
         return -1;
     }
     // this is probably (uh, definitely) wasteful
-    Field *fieldById(int id) {
+    const Field *fieldById(int id) {
         for (auto &i : fields) {
             if (i.id == id)
                 return &i;
         }
         return nullptr;
     };
+    QList<const Field*> fieldsOwnedByPlayer(int id) {
+        QList<const Field*> ret;
+        for (auto i : ownerships.keys()) {
+            if (ownerships[i] == id)
+                ret.append(i);
+        }
+        return ret;
+    }
+    int totalUpgradesByPlayer(int id) {
+        auto fields = fieldsOwnedByPlayer(id);
+        int ret { 0 };
+        for (auto i : fields) {
+            ret += upgrades[i];
+        }
+        return ret;
+    }
 };
 
 inline QSet<Game*> games {};
@@ -253,6 +270,7 @@ void ClientHandler::onChat(const Chat &chat) {
 void ClientHandler::onGameState(const GameState &gameState) {
     auto game = clientGame();
     if (game) {
+        game->started = true;
         for (auto client : game->clients) {
             client->client->m_dataStream << Packet(game->state);
         }
@@ -376,7 +394,10 @@ void ClientHandler::joinGame(int id, const QString &password) {
             leaveGame(false);
             game->clients.append(new PlayerData(this));
             game->players++;
-            m_dataStream << Packet(Entered{ game->id, game->name });
+            if (game->started)
+                m_dataStream << Packet( game->state );
+            else
+                m_dataStream << Packet(Entered{ game->id, game->name });
             sendMessage(game, Chat{QString("<%1> joined this game.").arg(m_player->name)});
             updateOpponents(game);
         }
@@ -508,6 +529,13 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
             if (i->position < 0)
                 i->position += 40;
             i->position %= 40;
+        }
+        updateOpponents(game);
+    }
+    case Effect::FEE_PER_RACE: {
+        for (auto i : clients) {
+            auto upgrades = game->totalUpgradesByPlayer(i->id);
+            i->money -= upgrades * effect.amount;
         }
         updateOpponents(game);
     }
