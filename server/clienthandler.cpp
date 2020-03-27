@@ -45,7 +45,6 @@ struct Game : public Match {
             upgrades.insert(&i, 0);
         }
     }
-    bool started { false };
     QList<PlayerData*> clients;
     GameState state {{
         { {"AHOJ"}, 0 }
@@ -187,8 +186,14 @@ void ClientHandler::onMatch(const Match &match) {
 
 void ClientHandler::onRoster(const Roster &roster) {
     Roster r;
+    // put the running games first so no sorting is needed on the client side
     for (auto &i : games) {
-        r.matches.append(*i);
+        if (!i->running)
+            r.matches.append(*i);
+    }
+    for (auto &i : games) {
+        if (i->running)
+            r.matches.append(*i);
     }
     m_dataStream << Packet(r);
 }
@@ -202,7 +207,7 @@ void ClientHandler::onJoin(const Join &join) {
 }
 
 void ClientHandler::onCreate(const Create &create) {
-    auto gameIt = games.insert(new Game(Match{lastGameID++, create.password, create.name, m_name, 0, create.capacity}));
+    auto gameIt = games.insert(new Game(Match{create.password, create.name, m_name, lastGameID++, 0, create.capacity, false}));
     auto game = *gameIt;
     joinGame(game->id, create.password);
 }
@@ -270,7 +275,7 @@ void ClientHandler::onChat(const Chat &chat) {
 void ClientHandler::onGameState(const GameState &gameState) {
     auto game = clientGame();
     if (game) {
-        game->started = true;
+        game->running = true;
         for (auto client : game->clients) {
             client->client->m_dataStream << Packet(game->state);
         }
@@ -394,7 +399,7 @@ void ClientHandler::joinGame(int id, const QString &password) {
             leaveGame(false);
             game->clients.append(new PlayerData(this));
             game->players++;
-            if (game->started)
+            if (game->running)
                 m_dataStream << Packet( game->state );
             else
                 m_dataStream << Packet(Entered{ game->id, game->name });
