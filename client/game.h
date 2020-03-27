@@ -140,10 +140,14 @@ public slots:
     void giveMoney(int amount);
     void takeMoney(int amount);
 
+    void reset();
+
 private slots:
     void onSocketStateChanged() {
         if (m_socket->error() != QAbstractSocket::UnknownSocketError) {
             statusSet("Error: " + m_socket->errorString());
+            reset();
+            emit serverError("Buď ti vypadl net, ale (spíš) spadl server, protože jsem to napsal v C++ a ne v Rustu");
         }
         else {
             switch (m_socket->state()) {

@@ -87,3 +87,20 @@ void Client::takeMoney(int amount) {
     }
     m_dataStream << Packet(QList<::Player>{{m_thisPlayerId, {}, {}, currentMoney + amount, -1, {}, {}, {}}});
 }
+
+void Client::reset() {
+    m_lobby->deleteLater();
+    m_lobby = nullptr;
+    emit lobbyChanged();
+    for (auto i : m_chat)
+        i->deleteLater();
+    m_chat.clear();
+    emit chatChanged();
+    for (auto i : m_players)
+        i->deleteLater();
+    m_players.clear();
+    emit playersChanged();
+    m_status = "Init";
+    m_state = ROSTER;
+    emit stateChanged();
+}

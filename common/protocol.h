@@ -180,13 +180,14 @@ struct Player {
     bool leader { false };
     bool ready { false };
     bool you { false };
+    bool onTurn { false };
 };
 inline QDataStream &operator<<(QDataStream &str, const Player &item) {
-    str << item.id << item.name << item.color << item.money << item.leader << item.ready << item.you << item.position;
+    str << item.id << item.name << item.color << item.money << item.leader << item.ready << item.you << item.position << item.onTurn;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Player &item) {
-    str >> item.id >> item.name >> item.color >> item.money >> item.leader >> item.ready >> item.you >> item.position;
+    str >> item.id >> item.name >> item.color >> item.money >> item.leader >> item.ready >> item.you >> item.position >> item.onTurn;
     return str;
 }
 
