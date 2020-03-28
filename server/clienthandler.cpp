@@ -139,7 +139,8 @@ void ClientHandler::onSocketStateChanged() {
 }
 
 void ClientHandler::onReadyRead(const QByteArray &data) {
-    QDataStream dataStream(data);
+    auto dcopy(data);
+    QDataStream dataStream(&dcopy, QIODevice::ReadWrite);
     Packet p;
     dataStream >> p;
     if (dataStream.status() != QDataStream::Ok) {
@@ -548,7 +549,7 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
 
 void ClientHandler::sendPacket(const Packet &packet) {
     QByteArray array;
-    QDataStream stream(array);
+    QDataStream stream(&array, QIODevice::ReadWrite);
     stream << packet;
     m_socket->sendBinaryMessage(array);
 }
