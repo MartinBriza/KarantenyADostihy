@@ -13,11 +13,24 @@
 
 include_directories(../common)
 
-set(TS_FILES Client_cs_CZ.ts)
+set(TS_FILES Client_en_US.ts Client_cs_CZ.ts)
+
+qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+configure_file(translations.qrc ${CMAKE_BINARY_DIR} COPYONLY)
+
 set(SOURCE_FILES
     main.cpp
     game.cpp
     datamodel.cpp
+
+    ../common/protocol.h
+
+    ../def/fields.h
+    ../def/chance.h
+    ../def/finance.h
+
+    ${CMAKE_BINARY_DIR}/translations.qrc
+    ${QM_FILES}
 )
 
 if(ANDROID)
@@ -38,7 +51,5 @@ target_compile_definitions(Client
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(Client
   PRIVATE Qt5::Core Qt5::Quick Qt5::Network)
-
-qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 
 install(TARGETS Client DESTINATION bin)

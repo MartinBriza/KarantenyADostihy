@@ -9,7 +9,7 @@ Window {
     visible: true
     width: 1280
     height: 720
-    title: qsTr("Karanteny")
+    title: qsTr("Quarantines")
 
     Roster {
         visible: client.state === ClientData.ROSTER

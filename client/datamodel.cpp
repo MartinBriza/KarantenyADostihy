@@ -77,7 +77,7 @@ Board::Board(QObject *parent)
     : QObject(parent)
 {
     QList<::Field> f {
-        #include "../def/fields.def"
+        #include "../def/fields.h"
     };
     for (auto i : f) {
         m_fields.append(new Field(this, i));

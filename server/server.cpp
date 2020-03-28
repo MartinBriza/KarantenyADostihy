@@ -1,7 +1,7 @@
 #include "server.h"
 
 Server::Server(QObject *parent) {
-    connect(&m_server, &QTcpServer::newConnection, this, &Server::onNewConnection);
+    connect(&m_server, &QWebSocketServer::newConnection, this, &Server::onNewConnection);
     m_server.listen(QHostAddress::Any, 16543);
 }
 

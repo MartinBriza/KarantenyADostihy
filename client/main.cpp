@@ -13,6 +13,10 @@ int main(int argc, char *argv[]) {
 
     QGuiApplication app(argc, argv);
 
+    QTranslator translator;
+    if (translator.load(QLocale(), QLatin1String("Client"), QLatin1String("_"), QLatin1String(":/client")))
+        QCoreApplication::installTranslator(&translator);
+
     qsrand(time(nullptr));
 
     qRegisterMetaType<UI::Field::Type>();

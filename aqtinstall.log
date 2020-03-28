@@ -1,0 +1,22 @@
+2020-03-28 18:18:31,297 - aqt - INFO - aqtinstall(aqt) v0.8 on Python 3.8.2 [CPython GCC 10.0.1 20200216 (Red Hat 10.0.1-0.8)]
+2020-03-28 18:18:31,604 - aqt - INFO - Finished installation
+2020-03-28 18:18:31,604 - aqt - INFO - Time elasped: 0.31078194 second
+2020-03-28 18:22:03,706 - aqt - INFO - aqtinstall(aqt) v0.8 on Python 3.8.2 [CPython GCC 10.0.1 20200216 (Red Hat 10.0.1-0.8)]
+2020-03-28 18:22:04,278 - aqt - INFO - Finished installation
+2020-03-28 18:22:04,278 - aqt - INFO - Time elasped: 0.57501249 second
+2020-03-28 18:22:08,379 - aqt - INFO - aqtinstall(aqt) v0.8 on Python 3.8.2 [CPython GCC 10.0.1 20200216 (Red Hat 10.0.1-0.8)]
+2020-03-28 18:22:08,676 - aqt - INFO - Finished installation
+2020-03-28 18:22:08,676 - aqt - INFO - Time elasped: 0.29986392 second
+2020-03-28 18:22:11,158 - aqt - INFO - aqtinstall(aqt) v0.8 on Python 3.8.2 [CPython GCC 10.0.1 20200216 (Red Hat 10.0.1-0.8)]
+2020-03-28 18:22:11,621 - aqt - INFO - Finished installation
+2020-03-28 18:22:11,622 - aqt - INFO - Time elasped: 0.46603814 second
+2020-03-28 18:22:34,410 - aqt - INFO - aqtinstall(aqt) v0.8 on Python 3.8.2 [CPython GCC 10.0.1 20200216 (Red Hat 10.0.1-0.8)]
+2020-03-28 18:22:34,726 - aqt - INFO - Finished installation
+2020-03-28 18:22:34,726 - aqt - INFO - Time elasped: 0.31875473 second
+2020-03-28 18:22:46,731 - aqt - INFO - aqtinstall(aqt) v0.8 on Python 3.8.2 [CPython GCC 10.0.1 20200216 (Red Hat 10.0.1-0.8)]
+2020-03-28 18:22:46,992 - aqt - INFO - Downloading https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/tools_mingw/qt.tools.win32_mingw730/7.3.0-1i686-7.3.0-release-posix-dwarf-rt_v5-rev0.7z...
+2020-03-28 18:22:46,993 - aqt - INFO - Downloading https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/tools_mingw/qt.tools.win64_mingw730/7.3.0-1x86_64-7.3.0-release-posix-seh-rt_v5-rev0.7z...
+2020-03-28 18:22:47,311 - aqt - ERROR - Download error: not a 7z file
+2020-03-28 18:22:47,311 - aqt - ERROR - Installation error detected.
+2020-03-28 18:22:47,320 - aqt - INFO - Redirected to new URL: http://ftp.fau.de/qtproject/online/qtsdkrepository/windows_x86/desktop/tools_mingw/qt.tools.win64_mingw730/7.3.0-1x86_64-7.3.0-release-posix-seh-rt_v5-rev0.7z
+2020-03-28 18:23:04,834 - aqt - INFO - Finish installation of x86_64-7.3.0-release-posix-seh-rt_v5-rev0.7z in 17.840995292004663
