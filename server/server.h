@@ -6,8 +6,8 @@
 #include "clienthandler.h"
 
 #include <QObject>
-#include <QTcpServer>
-#include <QTcpSocket>
+#include <QtWebSockets/QWebSocketServer>
+#include <QtWebSockets/QWebSocket>
 
 class Server : public QObject {
     Q_OBJECT
@@ -16,7 +16,7 @@ public:
 private slots:
     void onNewConnection();
 private:
-    QTcpServer m_server;
+    QWebSocketServer m_server;
 };
 
 #endif // SERVER_H

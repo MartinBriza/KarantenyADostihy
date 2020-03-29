@@ -37,7 +37,7 @@ endif()
 target_compile_definitions(Client
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(Client
-  PRIVATE Qt5::Core Qt5::Quick Qt5::Network)
+  PRIVATE Qt5::Core Qt5::Quick Qt5::WebSockets)
 
 qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 

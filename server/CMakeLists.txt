@@ -11,6 +11,6 @@ add_executable(Server
 )
 
 target_link_libraries(Server PRIVATE
-    Qt5::Core Qt5::Network Qt5::Gui
+    Qt5::Core Qt5::WebSockets Qt5::Gui
 )
 

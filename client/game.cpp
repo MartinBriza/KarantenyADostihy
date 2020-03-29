@@ -14,56 +14,56 @@ QString Client::randomName(int count) {
 }
 
 void Client::join(int id, const QString &password) {
-    m_dataStream << Packet(Join{id, password});
+    sendPacket(Packet(Join{id, password}));
 }
 
 void Client::leave() {
-    m_dataStream << Packet(Join{ -1, {}});
+    sendPacket(Packet(Join{ -1, {}}));
 }
 
 void Client::create(const QString &name) {
     if (name.isEmpty())
-        m_dataStream << Packet(Create{nameGet() + "'s game"});
+        sendPacket(Packet(Create{nameGet() + "'s game"}));
     else
-        m_dataStream << Packet(Create{name});
+        sendPacket(Packet(Create{name}));
 }
 
 void Client::sendMessage(const QString &message) {
-    m_dataStream << Packet(Chat { QDateTime().time().toString(), nameGet(), message, 0 });
+    sendPacket(Packet(Chat { QDateTime().time().toString(), nameGet(), message, 0 }));
 }
 
 void Client::refreshRoster() {
     if (m_socket->state() == QAbstractSocket::ConnectedState)
-        m_dataStream << Packet(Roster {});
+        sendPacket(Packet(Roster {}));
     else if (m_socket->state() == QAbstractSocket::UnconnectedState) {
-        m_socket->connectToHost(settings.value("server", DEFAULT_SERVER).toString(), settings.value("port", DEFAULT_PORT).toInt());
+        m_socket->open(QUrl(QString("ws://%1:%2").arg(settings.value("server", DEFAULT_SERVER).toString()).arg(settings.value("port", DEFAULT_PORT).toInt())));
     }
 }
 
 void Client::setReady(bool val) {
     if (m_thisPlayerId > 0) {
-        m_dataStream << Packet(QList<::Player>{{m_thisPlayerId, {}, {}, -1, -1, {}, val, {}}});
+        sendPacket(Packet(QList<::Player>{{m_thisPlayerId, {}, {}, -1, -1, {}, val, {}}}));
     }
 }
 
 void Client::startGame() {
-    m_dataStream << Packet(GameState{});
+    sendPacket(Packet(GameState{}));
 }
 
 void Client::move(int id, int position) {
-    m_dataStream << Packet(QList<::Player>{{id, {}, {}, -1, position, {}, {}, {}}});
+    sendPacket(Packet(QList<::Player>{{id, {}, {}, -1, position, {}, {}, {}}}));
 }
 
 void Client::buy(int id) {
-    m_dataStream << Packet(QList<Ownership>{Ownership{m_thisPlayerId, id}});
+    sendPacket(Packet(QList<Ownership>{Ownership{m_thisPlayerId, id}}));
 }
 
 void Client::drawCard(int type) {
     if (type == Effect::DRAW_CHANCE) {
-        m_dataStream << Packet(Card{{}, "chance", {}});
+        sendPacket(Packet(Card{{}, "chance", {}}));
     }
     else if (type == Effect::DRAW_FINANCE) {
-        m_dataStream << Packet(Card{{}, "finance", {}});
+        sendPacket(Packet(Card{{}, "finance", {}}));
     }
     else {
         qWarning() << "DrawCard called with type" << type << "instead of" << (int)Effect::DRAW_CHANCE << "or" << (int)Effect::DRAW_FINANCE;
@@ -76,7 +76,7 @@ void Client::giveMoney(int amount) {
         if (i->you)
             currentMoney = i->money;
     }
-    m_dataStream << Packet(QList<::Player>{{m_thisPlayerId, {}, {}, currentMoney - amount, -1, {}, {}, {}}});
+    sendPacket(Packet(QList<::Player>{{m_thisPlayerId, {}, {}, currentMoney - amount, -1, {}, {}, {}}}));
 }
 
 void Client::takeMoney(int amount) {
@@ -85,7 +85,7 @@ void Client::takeMoney(int amount) {
         if (i->you)
             currentMoney = i->money;
     }
-    m_dataStream << Packet(QList<::Player>{{m_thisPlayerId, {}, {}, currentMoney + amount, -1, {}, {}, {}}});
+    sendPacket(Packet(QList<::Player>{{m_thisPlayerId, {}, {}, currentMoney + amount, -1, {}, {}, {}}}));
 }
 
 void Client::reset() {

@@ -3,7 +3,7 @@
 
 #include "protocol.h"
 
-#include <QTcpSocket>
+#include <QtWebSockets/QWebSocket>
 #include <QList>
 
 struct Game;
@@ -14,14 +14,14 @@ class ClientHandler : public QObject {
 public:
     friend struct PlayerData; //I'm lazy
 
-    ClientHandler(QObject *parent = nullptr, QTcpSocket *socket = nullptr);
+    ClientHandler(QObject *parent = nullptr, QWebSocket *socket = nullptr);
     virtual ~ClientHandler();
 
     void setPlayer(PlayerData *player);
 
 private slots:
     void onSocketStateChanged();
-    void onReadyRead();
+    void onReadyRead(const QByteArray &message);
     void onSocketError(QAbstractSocket::SocketError err);
 private:
     // packet handlers
@@ -54,8 +54,9 @@ private:
 
     void handleEffect(Game *game, const Effect &effect);
 
-    QTcpSocket *m_socket;
-    QDataStream m_dataStream;
+    void sendPacket(const Packet &p);
+
+    QWebSocket *m_socket;
     PlayerData *m_player;
     QString m_name;
 };

@@ -110,15 +110,14 @@ struct Game : public Match {
 inline QSet<Game*> games {};
 
 
-ClientHandler::ClientHandler(QObject *parent, QTcpSocket *socket)
+ClientHandler::ClientHandler(QObject *parent, QWebSocket *socket)
     : QObject(parent)
     , m_socket(socket)
-    , m_dataStream(m_socket)
 {
-    connect(m_socket, &QTcpSocket::readyRead, this, &ClientHandler::onReadyRead);
-    connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &ClientHandler::onSocketError);
-    connect(m_socket, &QTcpSocket::stateChanged, this, &ClientHandler::onSocketStateChanged);
-    m_dataStream << Packet{Ahoj{}};
+    connect(m_socket, &QWebSocket::binaryMessageReceived, this, &ClientHandler::onReadyRead);
+    connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, &ClientHandler::onSocketError);
+    connect(m_socket, &QWebSocket::stateChanged, this, &ClientHandler::onSocketStateChanged);
+    sendPacket(Packet{Ahoj{}});
 }
 
 ClientHandler::~ClientHandler() {
@@ -137,13 +136,14 @@ void ClientHandler::onSocketStateChanged() {
     }
 }
 
-void ClientHandler::onReadyRead() {
-    if (!m_socket->isReadable())
+void ClientHandler::onReadyRead(const QByteArray &message) {
+    if (!m_socket->isValid())
         return;
     Packet p;
-    m_dataStream >> p;
-    if (m_dataStream.status() != QDataStream::Ok) {
-        qCritical() << "GOT GARBAGE:" << m_socket->readAll();
+    QDataStream stream;
+    stream >> p;
+    if (stream.status() != QDataStream::Ok) {
+        qCritical() << "GOT GARBAGE:" << message;
         return;
     }
     else {
@@ -177,7 +177,7 @@ void ClientHandler::onAhoj(const Ahoj &ahoj) {
     for (auto i : games) {
         roster.matches.append(*i);
     }
-    m_dataStream << Packet(roster);
+    sendPacket(Packet(roster));
 }
 
 void ClientHandler::onMatch(const Match &match) {
@@ -195,7 +195,7 @@ void ClientHandler::onRoster(const Roster &roster) {
         if (i->running)
             r.matches.append(*i);
     }
-    m_dataStream << Packet(r);
+    sendPacket(Packet(r));
 }
 
 void ClientHandler::onJoin(const Join &join) {
@@ -277,7 +277,7 @@ void ClientHandler::onGameState(const GameState &gameState) {
     if (game) {
         game->running = true;
         for (auto client : game->clients) {
-            client->client->m_dataStream << Packet(game->state);
+            client->client->sendPacket(Packet(game->state));
         }
         updateOwnerships(game);
     }
@@ -294,11 +294,11 @@ void ClientHandler::onOwnerships(const QList<Ownership> &ownerships) {
             continue;
         if (game->ownerships[card] == 0) {
             if (m_player->position != card->id - 1) {
-                m_dataStream << Packet(Packet::ERROR, "Koupit si můžeš jen kartu, na který stojíš");
+                sendPacket(Packet(Packet::ERROR, "Koupit si můžeš jen kartu, na který stojíš"));
                 break;
             }
             if (m_player->money < card->price) {
-                m_dataStream << Packet(Packet::ERROR, "Na tuhle kartu seš moc velká socka");
+                sendPacket(Packet(Packet::ERROR, "Na tuhle kartu seš moc velká socka"));
                 break;
             }
             m_player->money -= card->price;
@@ -315,7 +315,7 @@ void ClientHandler::onOwnerships(const QList<Ownership> &ownerships) {
             else {
             }
         } else {
-            m_dataStream << Packet(Packet::ERROR, "Nemůžeš koupit nebo prodat cizí kusy");
+            sendPacket(Packet(Packet::ERROR, "Nemůžeš koupit nebo prodat cizí kusy"));
             break;
         }
     }
@@ -337,31 +337,30 @@ void ClientHandler::onCard(const Card &card) {
             handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_FINANCE});
         }
         else {
-            m_dataStream << Packet(Packet::ERROR, "Hele, nevim, co tam nacvičuješ, ale o karty se takhle neříká");
+            sendPacket(Packet(Packet::ERROR, "Hele, nevim, co tam nacvičuješ, ale o karty se takhle neříká"));
         }
     }
     else {
-        m_dataStream << Packet(Packet::ERROR, "Hele, nevim, co tam nacvičuješ, ale o karty se takhle neříká");
+        sendPacket(Packet(Packet::ERROR, "Hele, nevim, co tam nacvičuješ, ale o karty se takhle neříká"));
     }
 }
 
 void ClientHandler::onDice(const Dice &dice) {
     auto game = clientGame();
     auto value = qrand() % 6 + 1;
-    m_dataStream << Packet(Dice { value });
+    sendPacket(Packet(Dice { value }));
     sendMessage(game, QString("<%1> just threw %2").arg(m_player->name).arg(value));
 }
 
 void ClientHandler::onBullshit() {
-    m_dataStream << Packet(Packet::ERROR, "Tvůj klient posílá kraviny.");
+    sendPacket(Packet(Packet::ERROR, "Tvůj klient posílá kraviny."));
 }
 
 void ClientHandler::sendMessage(Game *game, const Chat &message) {
     if (!game)
         return;
     for (auto c : game->clients) {
-        if (c->client->m_socket->isWritable())
-            c->client->m_dataStream << Packet(message);
+        c->client->sendPacket(Packet(message));
     }
 }
 
@@ -389,20 +388,20 @@ void ClientHandler::joinGame(int id, const QString &password) {
                 }
             }
             if (game->clients.count() >= game->maximumPlayers) {
-                m_dataStream << Packet(Packet::ERROR, "This game is full");
+                sendPacket(Packet(Packet::ERROR, "This game is full"));
                 return;
             }
             else if (!game->password.isEmpty() && game->password != password) {
-                m_dataStream << Packet(Packet::ERROR, "Wrong password");
+                sendPacket(Packet(Packet::ERROR, "Wrong password"));
                 return;
             }
             leaveGame(false);
             game->clients.append(new PlayerData(this));
             game->players++;
             if (game->running)
-                m_dataStream << Packet( game->state );
+                sendPacket(Packet( game->state ));
             else
-                m_dataStream << Packet(Entered{ game->id, game->name });
+                sendPacket(Packet(Entered{ game->id, game->name }));
             sendMessage(game, Chat{QString("<%1> joined this game.").arg(m_player->name)});
             updateOpponents(game);
         }
@@ -410,7 +409,7 @@ void ClientHandler::joinGame(int id, const QString &password) {
 }
 
 void ClientHandler::leaveGame(bool notify) {
-    m_dataStream << Packet(Entered{ -1, {} });
+    sendPacket(Packet(Entered{ -1, {} }));
     for (auto game : games) {
         for (auto i : game->clients) {
             if (i->client == this) {
@@ -439,7 +438,7 @@ void ClientHandler::updateOwnerships(Game *game) {
         data.append({game->ownerships[i], i->id});
     }
     for (auto i : game->clients) {
-        i->client->m_dataStream << Packet(data);
+        i->client->sendPacket(Packet(data));
     }
 }
 
@@ -466,7 +465,7 @@ void ClientHandler::updateOpponents(Game *game) {
             first = false;
             opponents.append(o);
         }
-        client->client->m_dataStream << Packet(opponents);
+        client->client->sendPacket(Packet(opponents));
     }
 }
 
@@ -499,14 +498,14 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
         auto &c = chanceCards[qrand() % chanceCards.count()];
         sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Náhoda - \"%2\"").arg(m_player->name).arg(c.name)});
         handleEffect(game, c.effect);
-        m_dataStream << Packet(c);
+        sendPacket(Packet(c));
         break;
     }
     case Effect::DRAW_FINANCE: {
         auto &c = financeCards[qrand() % financeCards.count()];
         sendMessage(game, QString("Hráč %1 vytáhl kartu Finance - \"%2\"").arg(m_player->name).arg(c.name));
         handleEffect(game, c.effect);
-        m_dataStream << Packet(c);
+        sendPacket(Packet(c));
         break;
     }
     case Effect::GAIN:
@@ -545,4 +544,11 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
         updateOpponents(game);
     }
     }
+}
+
+void ClientHandler::sendPacket(const Packet &p) {
+    QByteArray frame;
+    QDataStream stream(&frame, QIODevice::WriteOnly);
+    stream << p;
+    m_socket->sendBinaryMessage(frame);
 }

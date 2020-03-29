@@ -11,7 +11,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt5 COMPONENTS Core Quick LinguistTools REQUIRED)
+find_package(Qt5 COMPONENTS Core Quick LinguistTools WebSockets REQUIRED)
 
 add_subdirectory(client)
 add_subdirectory(server)

@@ -9,7 +9,7 @@
 #include <QtQml>
 #include <QColor>
 
-#include <QTcpSocket>
+#include <QtWebSockets/QWebSocket>
 
 #define DEFAULT_SERVER "46.36.35.81"
 #define DEFAULT_PORT 16543
@@ -40,8 +40,7 @@ public:
 
     Client(QObject *parent = nullptr)
         : QObject(parent)
-        , m_socket(new QTcpSocket(this))
-        , m_dataStream(m_socket)
+        , m_socket(new QWebSocket("http://ma.rtinbriza.cz/karanteny", QWebSocketProtocol::Version13, this))
         , m_roster(new UI::Roster(this))
         , m_refreshTimer()
     {
@@ -49,11 +48,11 @@ public:
         m_refreshTimer.setSingleShot(false);
 
         connect(&m_refreshTimer, &QTimer::timeout, this, &Client::refreshRoster);
-        connect(m_socket, &QTcpSocket::readyRead, this, &Client::onReadyRead);
-        connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Client::onError);
-        connect(m_socket, &QTcpSocket::stateChanged, this, &Client::onSocketStateChanged);
+        connect(m_socket, &QWebSocket::binaryMessageReceived, this, &Client::onReadyRead);
+        connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, &Client::onError);
+        connect(m_socket, &QWebSocket::stateChanged, this, &Client::onSocketStateChanged);
         QTimer::singleShot(0, [this]() {
-            m_socket->connectToHost(settings.value("server", DEFAULT_SERVER).toString(), settings.value("port", DEFAULT_PORT).toInt());
+            m_socket->open(QUrl(QString("ws://%1:%2").arg(settings.value("server", DEFAULT_SERVER).toString()).arg(settings.value("port", DEFAULT_PORT).toInt())));
             m_refreshTimer.start();
         });
     }
@@ -65,8 +64,8 @@ public:
         if (settings.value("server", DEFAULT_SERVER).toString() != val) {
             settings.setValue("server", val);
             emit serverChanged();
-            m_socket->disconnectFromHost();
-            m_socket->connectToHost(settings.value("server", DEFAULT_SERVER).toString(), settings.value("port", DEFAULT_PORT).toInt());
+            m_socket->close();
+            m_socket->open(QUrl(QString("ws://%1:%2").arg(settings.value("server", DEFAULT_SERVER).toString()).arg(settings.value("port", DEFAULT_PORT).toInt())));
         }
     }
     int portGet() {
@@ -76,8 +75,8 @@ public:
         if (settings.value("port", DEFAULT_PORT).toInt() != val) {
             settings.setValue("port", val);
             emit portChanged();
-            m_socket->disconnectFromHost();
-            m_socket->connectToHost(settings.value("server", DEFAULT_SERVER).toString(), settings.value("port", DEFAULT_PORT).toInt());
+            m_socket->close();
+            m_socket->open(QUrl(QString("ws://%1:%2").arg(settings.value("server", DEFAULT_SERVER).toString()).arg(settings.value("port", DEFAULT_PORT).toInt())));
         }
     }
 
@@ -109,7 +108,7 @@ public:
         if (settings.value("name", randomName()).toString() != name) {
             return settings.setValue("name", name);
             emit nameChanged();
-            m_dataStream << Packet(Ahoj{name});
+            sendPacket(Packet(Ahoj{name}));
         }
     }
 
@@ -143,6 +142,12 @@ public slots:
     void reset();
 
 private slots:
+    void sendPacket(const Packet &p) {
+        QByteArray frame;
+        QDataStream stream(&frame, QIODevice::WriteOnly);
+        stream << p;
+        m_socket->sendBinaryMessage(frame);
+    }
     void onSocketStateChanged() {
         if (m_socket->error() != QAbstractSocket::UnknownSocketError) {
             statusSet("Error: " + m_socket->errorString());
@@ -160,101 +165,100 @@ private slots:
         }
 
         if (m_socket->state() == QAbstractSocket::ConnectedState) {
-            m_dataStream << Packet(Ahoj{nameGet()});
+            sendPacket(Packet(Ahoj{nameGet()}));
         }
     }
-    void onReadyRead() {
-        while(m_socket->bytesAvailable() > 0) {
-            Packet p;
-            m_dataStream >> p;
-            switch (p.type) {
-            case Packet::AHOJ:
-                m_dataStream << Packet(Ahoj{nameGet()});
-                break;
-            case Packet::ERROR:
-                qCritical() << "SERVER ERROR: " << p.error;
-                emit serverError(p.error);
-                break;
-            case Packet::ROSTER:
-                if (m_dataStream.status() == QDataStream::Ok)
-                    m_roster->regenerate(p.roster);
-                break;
-            case Packet::ENTERED: {
-                if (p.entered.id >= 0) {
-                    m_lobby = new UI::Lobby(this, p.entered.id, p.entered.name);
-                    emit lobbyChanged();
-                    m_state = LOBBY;
-                    emit stateChanged();
-                }
-                else {
-                    m_lobby->deleteLater();
-                    m_lobby = nullptr;
-                    emit lobbyChanged();
-                    m_state = ROSTER;
-                    emit stateChanged();
-                }
-                break;
-            }
-            case Packet::PLAYERS: {
-                QSet<int> oldIDs;
-                QSet<int> newIDs;
-                for (auto i : m_players)
-                    oldIDs.insert(i->id);
-                for (auto i : p.players)
-                    newIDs.insert(i.id);
-                if (newIDs != oldIDs) {
-                    m_players.clear();
-                    for (auto &i : p.players) {
-                        m_players.append(new UI::Player(this, i));
-                        if (i.you && m_thisPlayerId != i.id) {
-                            m_thisPlayerId = i.id;
-                            emit thisPlayerIdChanged();
-                        }
-                    }
-                    emit playersChanged();
-                }
-                else {
-                    for (auto old : m_players) {
-                        for (auto refresh : p.players) {
-                            if (old->id == refresh.id) {
-                                old->update(refresh);
-                            }
-                        }
-                    }
-                }
-                break;
-            }
-            case Packet::CHAT:
-                m_chat.append(new UI::Chat(this, p.chat));
-                emit chatChanged();
-                break;
-            case Packet::GAMESTATE: {
-                m_state = GAME;
+    void onReadyRead(const QByteArray &message) {
+        QDataStream stream(message);
+        Packet p;
+        stream >> p;
+        switch (p.type) {
+        case Packet::AHOJ:
+            sendPacket(Packet(Ahoj{nameGet()}));
+            break;
+        case Packet::ERROR:
+            qCritical() << "SERVER ERROR: " << p.error;
+            emit serverError(p.error);
+            break;
+        case Packet::ROSTER:
+            if (stream.status() == QDataStream::Ok)
+                m_roster->regenerate(p.roster);
+            break;
+        case Packet::ENTERED: {
+            if (p.entered.id >= 0) {
+                m_lobby = new UI::Lobby(this, p.entered.id, p.entered.name);
+                emit lobbyChanged();
+                m_state = LOBBY;
                 emit stateChanged();
-                break;
             }
-            case Packet::OWNERSHIPS: {
-                for (auto ownership : p.ownerships) {
-                    for (auto field : m_board->fieldList()) {
-                        if (ownership.card == field->id) {
-                            for (auto player : m_players) {
-                                if (ownership.player == player->id) {
-                                    field->ownerSet(player);
-                                }
+            else {
+                m_lobby->deleteLater();
+                m_lobby = nullptr;
+                emit lobbyChanged();
+                m_state = ROSTER;
+                emit stateChanged();
+            }
+            break;
+        }
+        case Packet::PLAYERS: {
+            QSet<int> oldIDs;
+            QSet<int> newIDs;
+            for (auto i : m_players)
+                oldIDs.insert(i->id);
+            for (auto i : p.players)
+                newIDs.insert(i.id);
+            if (newIDs != oldIDs) {
+                m_players.clear();
+                for (auto &i : p.players) {
+                    m_players.append(new UI::Player(this, i));
+                    if (i.you && m_thisPlayerId != i.id) {
+                        m_thisPlayerId = i.id;
+                        emit thisPlayerIdChanged();
+                    }
+                }
+                emit playersChanged();
+            }
+            else {
+                for (auto old : m_players) {
+                    for (auto refresh : p.players) {
+                        if (old->id == refresh.id) {
+                            old->update(refresh);
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        case Packet::CHAT:
+            m_chat.append(new UI::Chat(this, p.chat));
+            emit chatChanged();
+            break;
+        case Packet::GAMESTATE: {
+            m_state = GAME;
+            emit stateChanged();
+            break;
+        }
+        case Packet::OWNERSHIPS: {
+            for (auto ownership : p.ownerships) {
+                for (auto field : m_board->fieldList()) {
+                    if (ownership.card == field->id) {
+                        for (auto player : m_players) {
+                            if (ownership.player == player->id) {
+                                field->ownerSet(player);
                             }
                         }
                     }
                 }
-                for (auto player : m_players) {
-                    player->updateOwnerships(p.ownerships);
-                }
-                break;
             }
-            case Packet::CARD: {
-                emit displayCard(p.card.header, p.card.name);
-                break;
+            for (auto player : m_players) {
+                player->updateOwnerships(p.ownerships);
             }
-            }
+            break;
+        }
+        case Packet::CARD: {
+            emit displayCard(p.card.header, p.card.name);
+            break;
+        }
         }
     }
     void onError(QAbstractSocket::SocketError err) {
@@ -275,8 +279,7 @@ signals:
 
 private:
     QSettings settings;
-    QTcpSocket *m_socket { nullptr };
-    QDataStream m_dataStream;
+    QWebSocket *m_socket { nullptr };
     UI::Roster *m_roster { nullptr };
     UI::Lobby *m_lobby { nullptr };
     QList<UI::Chat*> m_chat {};
