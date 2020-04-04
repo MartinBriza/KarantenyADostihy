@@ -21,6 +21,7 @@ Item {
                 }
             }
             ListView {
+                clip: true
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 model: client.chat
