@@ -65,14 +65,16 @@ struct Game : public Match {
         return nullptr;
     }
     PlayerData *ownerOf(int field) {
+        int pos { 0 };
         for (auto i : ownerships.keys()) {
-            if (i->id == field) {
+            if (pos == field) {
                 for (auto c : clients) {
                     if (c->id == ownerships[i]) {
                         return c;
                     }
                 }
             }
+            pos++;
         }
         return nullptr;
     }
