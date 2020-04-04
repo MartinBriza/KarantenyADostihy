@@ -241,7 +241,7 @@ private slots:
             break;
         }
         case Packet::CHAT:
-            m_chat.append(new UI::Chat(this, p.chat));
+            m_chat.prepend(new UI::Chat(this, p.chat));
             emit chatChanged();
             break;
         case Packet::GAMESTATE: {
