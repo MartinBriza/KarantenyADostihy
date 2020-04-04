@@ -56,6 +56,9 @@ private:
 
     void sendPacket(const Packet &p);
 
+    inline static uint64_t lastId { 1 };
+    uint64_t id { lastId++ };
+
     QWebSocket *m_socket;
     PlayerData *m_player;
     QString m_name;

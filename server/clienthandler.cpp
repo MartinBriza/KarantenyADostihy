@@ -109,11 +109,20 @@ struct Game : public Match {
 
 inline QSet<Game*> games {};
 
+static Game *gameById(int id) {
+    for (auto g : games) {
+        if (g->id == id)
+            return g;
+    }
+    return nullptr;
+}
+
 
 ClientHandler::ClientHandler(QObject *parent, QWebSocket *socket)
     : QObject(parent)
     , m_socket(socket)
 {
+    qWarning() << "Client" << id << "connected from" << m_socket->peerAddress().toString();
     connect(m_socket, &QWebSocket::binaryMessageReceived, this, &ClientHandler::onReadyRead);
     connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, &ClientHandler::onSocketError);
     connect(m_socket, &QWebSocket::stateChanged, this, &ClientHandler::onSocketStateChanged);
@@ -129,8 +138,8 @@ void ClientHandler::setPlayer(PlayerData *player) {
 }
 
 void ClientHandler::onSocketStateChanged() {
-    qCritical() << "SOCKET STATE: " << m_socket->state();
     if (m_socket->state() == QAbstractSocket::UnconnectedState) {
+        qWarning() << "Client" << id << "disconnected";
         leaveGame();
         deleteLater();
     }
@@ -172,6 +181,8 @@ void ClientHandler::onError(const QString &err) {
 }
 
 void ClientHandler::onAhoj(const Ahoj &ahoj) {
+    qWarning() << "Client" << id << "sent Ahoj: " << ahoj.ahoj;
+
     m_name = ahoj.ahoj;
     Roster roster;
     for (auto i : games) {
@@ -185,6 +196,7 @@ void ClientHandler::onMatch(const Match &match) {
 }
 
 void ClientHandler::onRoster(const Roster &roster) {
+    qWarning() << "Client" << id << "requested Roster";
     Roster r;
     // put the running games first so no sorting is needed on the client side
     for (auto &i : games) {
@@ -199,6 +211,7 @@ void ClientHandler::onRoster(const Roster &roster) {
 }
 
 void ClientHandler::onJoin(const Join &join) {
+    qWarning() << "Client" << id << "requested to Join: " << join.id << " (" << (gameById(join.id) ? gameById(join.id)->name : "INVALID") << ")";
     if (join.id < 0) {
         leaveGame();
     } else {
@@ -209,6 +222,7 @@ void ClientHandler::onJoin(const Join &join) {
 void ClientHandler::onCreate(const Create &create) {
     auto gameIt = games.insert(new Game(Match{create.password, create.name, m_name, lastGameID++, 0, create.capacity, false}));
     auto game = *gameIt;
+    qWarning() << "Client" << id << "Created a game called" << create.name << ". It was assigned ID" << game->id;
     joinGame(game->id, create.password);
 }
 
@@ -227,12 +241,14 @@ void ClientHandler::onPlayers(const QList<Player> &players) {
         if (!c)
             continue;
         if (!i.name.isEmpty()) {
+            qWarning() << "Client" << id << QString("(<%1>) changed the name of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.name);
             sendMessage(game, QString("<%1> changed the name of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.name));
             m_name = c->name;
             c->name = i.name;
             changed = true;
         }
         if (i.color.isValid()) {
+            qWarning() << "Client" << id << QString("(<%1>) changed the color of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.color.name());
             sendMessage(game, QString("<%1> changed the color of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.color.name()));
             c->color = i.color;
             changed = true;
@@ -240,23 +256,30 @@ void ClientHandler::onPlayers(const QList<Player> &players) {
         if (i.money >= 0) {
             if (m_player->id == c->id) {
                 int diff = i.money - c->money;
-                if (diff > 0)
+                if (diff > 0) {
+                    qWarning() << "Client" << id << QString("(<%1>) took %2 from the bank").arg(m_player->name).arg(diff);
                     sendMessage(game, Chat{QString("<%1> took %2 from the bank").arg(m_player->name).arg(diff)});
-                else
+                }
+                else {
+                    qWarning() << "Client" << id << QString("(<%1>) gave %2 to the bank").arg(m_player->name).arg(diff);
                     sendMessage(game, Chat{QString("<%1> gave %2 to the bank").arg(m_player->name).arg(diff)});
+                }
             }
             else {
+                qWarning() << "Client" << id << QString("(<%1>) changed the money of <%2> to \"%3\" from \"%4\".").arg(m_player->name).arg(c->name).arg(i.money).arg(c->money);
                 sendMessage(game, QString("<%1> changed the money of <%2> to \"%3\" from \"%4\".").arg(m_player->name).arg(c->name).arg(i.money).arg(c->money));
             }
             c->money = i.money;
             changed = true;
         }
         if (i.position >= 0) {
-            sendMessage(game, QString("<%1> changed the position of <%2> to \"%3\" from \"%4\".").arg(m_player->name).arg(c->name).arg(i.position % 40).arg(c->position));
+            qWarning() << "Client" << id << QString("(<%1>) changed the position of <%2> from \"%3\" to \"%4\".").arg(m_player->name).arg(c->name).arg(c->position).arg(i.position % 40);
+            sendMessage(game, QString("<%1> changed the position of <%2> from \"%3\" to \"%4\".").arg(m_player->name).arg(c->name).arg(c->position).arg(i.position % 40));
             c->position = i.position % 40;
             changed = true;
         }
-        if (c->ready != i.ready) {
+        if (c->ready != i.ready && c->id == i.id) {
+            qWarning() << "Client" << id << QString("(<%1>) is now %2 ready.").arg(m_player->name).arg(i.ready ? "" : "not");
             sendMessage(game, QString("<%1> is now %2 ready.").arg(m_player->name).arg(i.ready ? "" : "not"));
             c->ready = i.ready;
             changed = true;
@@ -274,6 +297,7 @@ void ClientHandler::onChat(const Chat &chat) {
 
 void ClientHandler::onGameState(const GameState &gameState) {
     auto game = clientGame();
+    qWarning() << "Client" << id << "Started the game" << game->id;
     if (game) {
         game->running = true;
         for (auto client : game->clients) {
@@ -303,12 +327,14 @@ void ClientHandler::onOwnerships(const QList<Ownership> &ownerships) {
             }
             m_player->money -= card->price;
             game->ownerships[card] = i.player;
+            qWarning() << "Client" << id << QString("<%1> bought %2 for %3.").arg(m_player->name).arg(card->name).arg(card->price);
             sendMessage(game, QString("<%1> bought %2 for %3.").arg(m_player->name).arg(card->name).arg(card->price));
             updateOwnerships(game);
             updateOpponents(game);
         } else if (game->ownerships[card] == m_player->id && m_player->id != i.player) {
             if (m_player->id != i.player) {
                 game->ownerships[card] = i.player;
+                qWarning() << "Client" << id << QString("<%1> gave %2 to <%3>.").arg(m_player->name).arg(card->name).arg(client->name);
                 sendMessage(game, QString("<%1> gave %2 to <%3>.").arg(m_player->name).arg(card->name).arg(client->name));
                 updateOwnerships(game);
             }
