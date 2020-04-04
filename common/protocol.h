@@ -110,13 +110,14 @@ struct Match {
     int players { 0 };
     int maximumPlayers { 8 };
     bool running { false };
+    bool strict { true };
 };
 inline QDataStream &operator<<(QDataStream &str, const Match &item) {
-    str << item.id << QString((item.password.isEmpty() ? QString("") : QString("***"))) << item.name << item.owner << item.players << item.maximumPlayers << item.running;
+    str << item.id << QString((item.password.isEmpty() ? QString("") : QString("***"))) << item.name << item.owner << item.players << item.maximumPlayers << item.running << item.strict;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Match &item) {
-    str >> item.id >> item.password >> item.name >> item.owner >> item.players >> item.maximumPlayers >> item.running;
+    str >> item.id >> item.password >> item.name >> item.owner >> item.players >> item.maximumPlayers >> item.running >> item.strict;
     return str;
 }
 
@@ -172,6 +173,19 @@ inline QDataStream &operator>>(QDataStream &str, Entered &item) {
     return str;
 }
 
+struct Dice {
+    QList<int> values;
+    bool moved;
+};
+inline QDataStream &operator<<(QDataStream &str, const Dice &item) {
+    str << item.values << item.moved;
+    return str;
+}
+inline QDataStream &operator>>(QDataStream &str, Dice &item) {
+    str >> item.values >> item.moved;
+    return str;
+}
+
 struct Player {
     int id { 0 };
     QString name { "" };
@@ -182,13 +196,14 @@ struct Player {
     bool ready { false };
     bool you { false };
     bool onTurn { false };
+    Dice dice;
 };
 inline QDataStream &operator<<(QDataStream &str, const Player &item) {
-    str << item.id << item.name << item.color << item.money << item.leader << item.ready << item.you << item.position << item.onTurn;
+    str << item.id << item.name << item.color << item.money << item.leader << item.ready << item.you << item.position << item.onTurn << item.dice;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Player &item) {
-    str >> item.id >> item.name >> item.color >> item.money >> item.leader >> item.ready >> item.you >> item.position >> item.onTurn;
+    str >> item.id >> item.name >> item.color >> item.money >> item.leader >> item.ready >> item.you >> item.position >> item.onTurn >> item.dice;
     return str;
 }
 
@@ -247,18 +262,6 @@ inline QDataStream &operator>>(QDataStream &str, GameState &item) {
     return str;
 }
 
-struct Dice {
-    int value;
-};
-inline QDataStream &operator<<(QDataStream &str, const Dice &item) {
-    str << item.value;
-    return str;
-}
-inline QDataStream &operator>>(QDataStream &str, Dice &item) {
-    str >> item.value;
-    return str;
-}
-
 struct Packet {
     enum Type {
         NONE = 0,
@@ -312,7 +315,7 @@ struct Packet {
     Packet(const GameState &d) : type(GAMESTATE), gameState(d) { }
     Packet(const QList<Ownership> &d) : type(OWNERSHIPS), ownerships(d) { }
     Packet(const Card &d) : type(CARD), card(d) { }
-    Packet(const Dice &d) : type(CARD), dice(d) { }
+    Packet(const Dice &d) : type(DICE), dice(d) { }
     void setType(Type type) {
         clear();
         this->type = type;

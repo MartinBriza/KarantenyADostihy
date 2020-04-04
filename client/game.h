@@ -24,6 +24,7 @@ class Client : public QObject {
     Q_PROPERTY(QQmlListProperty<UI::Player> players READ playersGet NOTIFY playersChanged)
     Q_PROPERTY(int thisPlayerId READ thisPlayerId NOTIFY thisPlayerIdChanged)
     Q_PROPERTY(UI::Board *board READ boardGet CONSTANT)
+    Q_PROPERTY(bool strictGame READ strictGameGet CONSTANT)
 
     Q_PROPERTY(QString server READ serverGet WRITE serverSet NOTIFY serverChanged)
     Q_PROPERTY(int port READ portGet WRITE portSet NOTIFY portChanged)
@@ -111,6 +112,9 @@ public:
             sendPacket(Packet(Ahoj{name}));
         }
     }
+    bool strictGameGet() const {
+        return true;
+    }
 
     int thisPlayerId() const {
         return m_thisPlayerId;
@@ -138,6 +142,9 @@ public slots:
     void drawCard(int type);
     void giveMoney(int amount);
     void takeMoney(int amount);
+    void dice();
+    void diceMove();
+    void endTurn();
 
     void reset();
 
@@ -190,6 +197,8 @@ private slots:
                 emit lobbyChanged();
                 m_state = LOBBY;
                 emit stateChanged();
+                m_chat.clear();
+                emit chatChanged();
             }
             else {
                 m_lobby->deleteLater();
@@ -197,6 +206,8 @@ private slots:
                 emit lobbyChanged();
                 m_state = ROSTER;
                 emit stateChanged();
+                m_chat.clear();
+                emit chatChanged();
             }
             break;
         }

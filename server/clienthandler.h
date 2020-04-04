@@ -54,6 +54,7 @@ private:
 
     void handleEffect(Game *game, const Effect &effect);
 
+    void sendError(const QString &message);
     void sendPacket(const Packet &p);
 
     inline static uint64_t lastId { 1 };

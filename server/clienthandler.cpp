@@ -1,5 +1,9 @@
 #include "clienthandler.h"
 
+#include <QRandomGenerator>
+
+static QRandomGenerator rng;
+
 inline int lastGameID { 1 };
 inline int lastCardID { 1 };
 
@@ -51,6 +55,7 @@ struct Game : public Match {
     }};
     QMap<const Field*, int> ownerships;
     QMap<const Field*, int> upgrades;
+    int playerOnTurn { 0 };
 
     PlayerData *playerById(int id) {
         for (auto i : clients) {
@@ -104,6 +109,21 @@ struct Game : public Match {
             ret += upgrades[i];
         }
         return ret;
+    }
+    PlayerData *getPlayerOnTurn() {
+        int idx { 0 };
+        for (auto i : clients) {
+            if (idx == playerOnTurn)
+                return i;
+            idx++;
+        }
+        return nullptr;
+    }
+    bool isPlayerOnTurn(ClientHandler *handler) {
+        auto data = getPlayerOnTurn();
+        if (data && data->client == handler)
+            return true;
+        return false;
     }
 };
 
@@ -241,42 +261,62 @@ void ClientHandler::onPlayers(const QList<Player> &players) {
         if (!c)
             continue;
         if (!i.name.isEmpty()) {
-            qWarning() << "Client" << id << QString("(<%1>) changed the name of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.name);
-            sendMessage(game, QString("<%1> changed the name of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.name));
-            m_name = c->name;
-            c->name = i.name;
-            changed = true;
-        }
-        if (i.color.isValid()) {
-            qWarning() << "Client" << id << QString("(<%1>) changed the color of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.color.name());
-            sendMessage(game, QString("<%1> changed the color of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.color.name()));
-            c->color = i.color;
-            changed = true;
-        }
-        if (i.money >= 0) {
-            if (m_player->id == c->id) {
-                int diff = i.money - c->money;
-                if (diff > 0) {
-                    qWarning() << "Client" << id << QString("(<%1>) took %2 from the bank").arg(m_player->name).arg(diff);
-                    sendMessage(game, Chat{QString("<%1> took %2 from the bank").arg(m_player->name).arg(diff)});
-                }
-                else {
-                    qWarning() << "Client" << id << QString("(<%1>) gave %2 to the bank").arg(m_player->name).arg(diff);
-                    sendMessage(game, Chat{QString("<%1> gave %2 to the bank").arg(m_player->name).arg(diff)});
-                }
+            if (game->strict) {
+                sendError("Hele, tohle v týhle verzi hry nejde");
             }
             else {
-                qWarning() << "Client" << id << QString("(<%1>) changed the money of <%2> to \"%3\" from \"%4\".").arg(m_player->name).arg(c->name).arg(i.money).arg(c->money);
-                sendMessage(game, QString("<%1> changed the money of <%2> to \"%3\" from \"%4\".").arg(m_player->name).arg(c->name).arg(i.money).arg(c->money));
+                qWarning() << "Client" << id << QString("(<%1>) changed the name of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.name);
+                sendMessage(game, QString("<%1> changed the name of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.name));
+                m_name = c->name;
+                c->name = i.name;
+                changed = true;
             }
-            c->money = i.money;
-            changed = true;
+        }
+        if (i.color.isValid()) {
+            if (game->strict) {
+                sendError("Hele, tohle v týhle verzi hry nejde");
+            }
+            else {
+                qWarning() << "Client" << id << QString("(<%1>) changed the color of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.color.name());
+                sendMessage(game, QString("<%1> changed the color of <%2> to \"%3\".").arg(m_player->name).arg(c->name).arg(i.color.name()));
+                c->color = i.color;
+                changed = true;
+            }
+        }
+        if (i.money >= 0) {
+            if (game->strict) {
+                sendError("Hele, tohle v týhle verzi hry nejde");
+            }
+            else {
+                if (m_player->id == c->id) {
+                    int diff = i.money - c->money;
+                    if (diff > 0) {
+                        qWarning() << "Client" << id << QString("(<%1>) took %2 from the bank").arg(m_player->name).arg(diff);
+                        sendMessage(game, Chat{QString("<%1> took %2 from the bank").arg(m_player->name).arg(diff)});
+                    }
+                    else {
+                        qWarning() << "Client" << id << QString("(<%1>) gave %2 to the bank").arg(m_player->name).arg(diff);
+                        sendMessage(game, Chat{QString("<%1> gave %2 to the bank").arg(m_player->name).arg(diff)});
+                    }
+                }
+                else {
+                    qWarning() << "Client" << id << QString("(<%1>) changed the money of <%2> to \"%3\" from \"%4\".").arg(m_player->name).arg(c->name).arg(i.money).arg(c->money);
+                    sendMessage(game, QString("<%1> changed the money of <%2> to \"%3\" from \"%4\".").arg(m_player->name).arg(c->name).arg(i.money).arg(c->money));
+                }
+                c->money = i.money;
+                changed = true;
+            }
         }
         if (i.position >= 0) {
-            qWarning() << "Client" << id << QString("(<%1>) changed the position of <%2> from \"%3\" to \"%4\".").arg(m_player->name).arg(c->name).arg(c->position).arg(i.position % 40);
-            sendMessage(game, QString("<%1> changed the position of <%2> from \"%3\" to \"%4\".").arg(m_player->name).arg(c->name).arg(c->position).arg(i.position % 40));
-            c->position = i.position % 40;
-            changed = true;
+            if (game->strict) {
+                sendError("Hele, tohle v týhle verzi hry nejde");
+            }
+            else {
+                qWarning() << "Client" << id << QString("(<%1>) changed the position of <%2> from \"%3\" to \"%4\".").arg(m_player->name).arg(c->name).arg(c->position).arg(i.position % 40);
+                sendMessage(game, QString("<%1> changed the position of <%2> from \"%3\" to \"%4\".").arg(m_player->name).arg(c->name).arg(c->position).arg(i.position % 40));
+                c->position = i.position % 40;
+                changed = true;
+            }
         }
         if (c->ready != i.ready && c->id == i.id) {
             qWarning() << "Client" << id << QString("(<%1>) is now %2 ready.").arg(m_player->name).arg(i.ready ? "" : "not");
@@ -297,9 +337,15 @@ void ClientHandler::onChat(const Chat &chat) {
 
 void ClientHandler::onGameState(const GameState &gameState) {
     auto game = clientGame();
-    qWarning() << "Client" << id << "Started the game" << game->id;
     if (game) {
+        for (auto client : game->clients) {
+            if (!client->ready) {
+                sendPacket(Packet(Packet::ERROR, "Všichni ještě nejsou ready"));
+                return;
+            }
+        }
         game->running = true;
+        qWarning() << "Client" << id << "Started the game" << game->id;
         for (auto client : game->clients) {
             client->client->sendPacket(Packet(game->state));
         }
@@ -373,9 +419,52 @@ void ClientHandler::onCard(const Card &card) {
 
 void ClientHandler::onDice(const Dice &dice) {
     auto game = clientGame();
-    auto value = qrand() % 6 + 1;
-    sendPacket(Packet(Dice { value }));
-    sendMessage(game, QString("<%1> just threw %2").arg(m_player->name).arg(value));
+    if (game->isPlayerOnTurn(this)) {
+        for (auto i : game->clients) {
+            if (i->client != this) {
+                i->dice.values.clear();
+            }
+        }
+        if (dice.values.startsWith(-1)) {
+            qWarning() << "Client" << id << "wants to end their turn";
+            game->playerOnTurn++;
+            game->playerOnTurn %= game->clients.count();
+            for (auto i : game->clients) {
+                i->dice.values.clear();
+                i->dice.moved = false;
+            }
+            updateOpponents(game);
+            return;
+        }
+        else if (dice.values.isEmpty() && !dice.moved && !m_player->dice.moved) {
+            // throws
+            if (m_player->dice.values.empty() || m_player->dice.values.last() == 6) {
+                auto value = rng.bounded(1, 7);
+                qWarning() << "Client" << id << "threw" << value << "on his turn to dice";
+                m_player->dice.values.append(value);
+                sendMessage(game, QString("<%1> just threw %2").arg(m_player->name).arg(value));
+                if (m_player->dice.values == QList<int>{6, 6}) {
+                    handleEffect(game, Effect { Effect::PLAYER, Effect::MOVE_TO_SUSPENSION });
+                    m_player->dice.moved = true;
+                }
+                updateOpponents(game);
+                return;
+            }
+        }
+        else if (!m_player->dice.moved) {
+            // moves
+            qWarning() << "Client" << id << "wants to move after throwing dice";
+            m_player->dice.moved = true;
+            for (auto i : m_player->dice.values) {
+                m_player->position += i;
+                m_player->position %= 40;
+                updateOpponents(game);
+            }
+            return;
+        }
+    }
+    // gets here only when something is wrong
+    sendError("Hele, nemám teď čas zjišťovat, cos udělal/a blbě, ale tohle je prostě NELEGÁLNÍ");
 }
 
 void ClientHandler::onBullshit() {
@@ -478,6 +567,7 @@ void ClientHandler::updateOpponents(Game *game) {
     for (auto client : game->clients) {
         QList<Player> opponents;
         bool first = true;
+        int order = 0;
         for (auto i : game->clients) {
             Player o;
             o.id = i->id;
@@ -488,8 +578,11 @@ void ClientHandler::updateOpponents(Game *game) {
             o.position = i->position;
             o.money = i->money;
             o.leader = first;
+            o.onTurn = (order == game->playerOnTurn);
+            o.dice = i->dice;
             first = false;
             opponents.append(o);
+            order++;
         }
         client->client->sendPacket(Packet(opponents));
     }
@@ -569,7 +662,20 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
         }
         updateOpponents(game);
     }
+    case Effect::MOVE_TO_SUSPENSION: {
+        // TODO
+        m_player->position = 10;
+        updateOpponents(game);
     }
+    case Effect::MOVE_TO_LAST_FIELD: {
+        m_player->position = 39;
+        updateOpponents(game);
+    }
+    }
+}
+
+void ClientHandler::sendError(const QString &message) {
+    sendPacket(Packet{Packet::ERROR, message});
 }
 
 void ClientHandler::sendPacket(const Packet &p) {

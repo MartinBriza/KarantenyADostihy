@@ -36,28 +36,42 @@ Item {
         ColumnLayout {
             anchors.fill: parent
             RowLayout {
-                Text {
-                    text: "Bank"
-                }
-                SpinBox {
-                    id: bankSpinBox
-                    from: 0
-                    to: 1000000
-                    stepSize: 20
-                    editable: true
-                }
-                Button {
-                    text: "Give"
-                    onClicked: {
-                        client.giveMoney(bankSpinBox.value)
-                        bankSpinBox.value = 0
+                RowLayout {
+                    id: bankLayout
+                    visible: !client.strictGame
+                    Text {
+                        text: "Bank"
+                    }
+                    SpinBox {
+                        id: bankSpinBox
+                        from: 0
+                        to: 1000000
+                        stepSize: 20
+                        editable: true
+                    }
+                    Button {
+                        text: "Give"
+                        onClicked: {
+                            client.giveMoney(bankSpinBox.value)
+                            bankSpinBox.value = 0
+                        }
+                    }
+                    Button {
+                        text: "Take"
+                        onClicked: {
+                            client.takeMoney(bankSpinBox.value)
+                            bankSpinBox.value = 0
+                        }
                     }
                 }
+                Item {
+                    height: 1
+                    Layout.fillWidth: true
+                }
                 Button {
-                    text: "Take"
+                    text: "Odejít"
                     onClicked: {
-                        client.takeMoney(bankSpinBox.value)
-                        bankSpinBox.value = 0
+                        client.leave();
                     }
                 }
             }
@@ -69,10 +83,19 @@ Item {
                     Rectangle {
                         id: opponentDelegate
                         property variant player: modelData
+                        Connections {
+                            target: player
+                            onDiceChanged: {
+                                console.warn("AHOJ")
+                                console.warn(player.dice)
+                            }
+                        }
                         width: opponentLayout.width + 6
                         height: opponentLayout.height + 6
-                        border.width: 1
-                        border.color: "gray"
+                        border {
+                            width: player.onTurn ? 2 : 1
+                            color: player.onTurn ? "green" : "gray"
+                        }
                         ColumnLayout {
                             x: 3
                             y: 3
@@ -95,7 +118,7 @@ Item {
                                         }
                                     }
                                     Text {
-                                        text: "Money: " + modelData.money
+                                        text: "Peníze: " + modelData.money
                                     }
                                 }
                                 Item {
@@ -107,9 +130,11 @@ Item {
                                 }
                             }
                             RowLayout {
+                                enabled: player.you
                                 Repeater {
                                     model: ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"]
                                     Button {
+                                        visible: !client.strictGame
                                         enabled: opponentDelegate.player.you
                                         implicitWidth: implicitHeight
                                         onClicked: client.move(opponentDelegate.player.id, opponentDelegate.player.position + index + 1)
@@ -121,6 +146,35 @@ Item {
                                             anchors.bottom: parent.bottom
                                             anchors.bottomMargin: - parent.height / 16
                                         }
+                                    }
+                                }
+                                Button {
+                                    visible: client.strictGame && !(player.dice.length > 0 && player.dice[player.dice.length - 1] !== 6) && !player.diceMoved
+                                    enabled: player.onTurn
+                                    text: "Hodit kostkou"
+                                    onClicked: client.dice();
+                                }
+                                Button {
+                                    visible: client.strictGame && (player.dice.length > 0 && player.dice[player.dice.length - 1] !== 6) && !player.diceMoved
+                                    enabled: player.onTurn
+                                    text: "Jít"
+                                    onClicked: client.diceMove();
+                                }
+                                Button {
+                                    visible: client.strictGame && player.diceMoved
+                                    text: "Konec tahu"
+                                    onClicked: client.endTurn();
+                                }
+                                ColumnLayout {
+                                    visible: client.strictGame
+                                    spacing: 0
+                                    Text { text: "Hozeno" }
+                                    Text {
+                                        Layout.fillWidth: true
+                                        horizontalAlignment: Qt.AlignHCenter
+                                        font.bold: true
+                                        font.pixelSize: 16
+                                        text: String(player.dice)
                                     }
                                 }
                             }

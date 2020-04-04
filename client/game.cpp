@@ -33,8 +33,9 @@ void Client::sendMessage(const QString &message) {
 }
 
 void Client::refreshRoster() {
-    if (m_socket->state() == QAbstractSocket::ConnectedState)
+    if (m_socket->state() == QAbstractSocket::ConnectedState && m_state == ROSTER) {
         sendPacket(Packet(Roster {}));
+    }
     else if (m_socket->state() == QAbstractSocket::UnconnectedState) {
         m_socket->open(QUrl(QString("ws://%1:%2").arg(settings.value("server", DEFAULT_SERVER).toString()).arg(settings.value("port", DEFAULT_PORT).toInt())));
     }
@@ -86,6 +87,18 @@ void Client::takeMoney(int amount) {
             currentMoney = i->money;
     }
     sendPacket(Packet(QList<::Player>{{m_thisPlayerId, {}, {}, currentMoney + amount, -1, {}, {}, {}}}));
+}
+
+void Client::dice() {
+    sendPacket(Packet{Dice{}});
+}
+
+void Client::diceMove() {
+    sendPacket(Packet{Dice{{}, true}});
+}
+
+void Client::endTurn() {
+    sendPacket(Packet{Dice{{-1},false}});
 }
 
 void Client::reset() {

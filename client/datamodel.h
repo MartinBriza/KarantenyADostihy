@@ -260,6 +260,9 @@ class Player : public QObject, public ::Player {
     Q_PROPERTY(bool you READ youGet NOTIFY youChanged)
     Q_PROPERTY(QQmlListProperty<UI::Ownership> owns READ ownsGet CONSTANT)
     Q_PROPERTY(int ownsCount READ ownsCountGet CONSTANT)
+    Q_PROPERTY(bool onTurn READ onTurnGet NOTIFY onTurnChanged)
+    Q_PROPERTY(QList<int> dice READ diceGet NOTIFY diceChanged)
+    Q_PROPERTY(bool diceMoved READ diceMovedGet NOTIFY diceChanged)
 public:
     Player(Client *parent, const ::Player &data);
 
@@ -294,6 +297,16 @@ public:
             you = data.you;
             emit youChanged();
         }
+        if (onTurn != data.onTurn) {
+            onTurn = data.onTurn;
+            emit onTurnChanged();
+        }
+        if (dice.values != data.dice.values || dice.moved != data.dice.moved) {
+            qCritical() << data.dice.values;
+            dice.values = data.dice.values;
+            dice.moved = data.dice.moved;
+            emit diceChanged();
+        }
     }
     int idGet() const {
         return id;
@@ -319,11 +332,20 @@ public:
     bool youGet() const {
         return you;
     }
+    bool onTurnGet() const {
+        return onTurn;
+    }
     QQmlListProperty<UI::Ownership> ownsGet() {
         return QQmlListProperty<UI::Ownership>(this, m_owns);
     }
-    int ownsCountGet() {
+    int ownsCountGet() const {
         return m_owns.count();
+    }
+    QList<int> diceGet() const {
+        return dice.values;
+    }
+    bool diceMovedGet() const {
+        return dice.moved;
     }
 public slots:
     void updateOwnerships(const QList<::Ownership> &list) {
@@ -348,6 +370,8 @@ signals:
     void leaderChanged();
     void readyChanged();
     void youChanged();
+    void onTurnChanged();
+    void diceChanged();
 private:
     QList<Ownership*> m_owns { };
 };
