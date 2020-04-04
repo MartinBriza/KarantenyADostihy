@@ -588,6 +588,10 @@ void ClientHandler::updateOpponents(Game *game) {
     }
 }
 
+void ClientHandler::modifyPlayerMoney(PlayerData *player, int diff) {
+    m_player->money += diff;
+}
+
 void ClientHandler::handleEffect(Game *game, const Effect &effect) {
     if (!game)
         return;
@@ -645,6 +649,7 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
         }
         m_player->money += total;
         updateOpponents(game);
+        break;
     }
     case Effect::MOVE_STEPS: {
         for (auto i : clients) {
@@ -654,6 +659,7 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
             i->position %= 40;
         }
         updateOpponents(game);
+        break;
     }
     case Effect::FEE_PER_RACE: {
         for (auto i : clients) {
@@ -661,15 +667,31 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
             i->money -= upgrades * effect.amount;
         }
         updateOpponents(game);
+        break;
     }
     case Effect::MOVE_TO_SUSPENSION: {
         // TODO
+        if (effect.amount != 0 && m_player->position < 10)
+            modifyPlayerMoney(m_player, 4000);
         m_player->position = 10;
         updateOpponents(game);
+        break;
     }
     case Effect::MOVE_TO_LAST_FIELD: {
+        // TODO
+        if (effect.amount != 0)
+            modifyPlayerMoney(m_player, 4000);
         m_player->position = 39;
         updateOpponents(game);
+        break;
+    }
+    case Effect::MOVE_TO_PARKING_LOT: {
+        // TODO
+        if (effect.amount != 0 && m_player->position < 20)
+            modifyPlayerMoney(m_player, 4000);
+        m_player->position = 20;
+        updateOpponents(game);
+        break;
     }
     }
 }

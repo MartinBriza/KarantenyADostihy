@@ -51,6 +51,7 @@ private:
     void handleEmptyGame(Game *game);
     void updateOwnerships(Game *game);
     void updateOpponents(Game *game);
+    void modifyPlayerMoney(PlayerData *player, int diff);
 
     void handleEffect(Game *game, const Effect &effect);
 
