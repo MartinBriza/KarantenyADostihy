@@ -140,7 +140,7 @@ void ClientHandler::onReadyRead(const QByteArray &message) {
     if (!m_socket->isValid())
         return;
     Packet p;
-    QDataStream stream;
+    QDataStream stream(message);
     stream >> p;
     if (stream.status() != QDataStream::Ok) {
         qCritical() << "GOT GARBAGE:" << message;
