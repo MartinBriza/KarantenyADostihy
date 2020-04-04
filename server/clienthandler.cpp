@@ -67,10 +67,8 @@ struct Game : public Match {
     PlayerData *ownerOf(int field) {
         for (auto i : ownerships.keys()) {
             if (i->id == field) {
-                if (i->id <= 0)
-                    return nullptr;
                 for (auto c : clients) {
-                    if (c->id == i->id) {
+                    if (c->id == ownerships[i]) {
                         return c;
                     }
                 }
@@ -128,6 +126,14 @@ struct Game : public Match {
 };
 
 inline QSet<Game*> games {};
+
+static Game *gameByPlayer(PlayerData *player) {
+    for (auto g : games) {
+        if (g->clients.contains(player))
+            return g;
+    }
+    return nullptr;
+}
 
 static Game *gameById(int id) {
     for (auto g : games) {
@@ -314,7 +320,7 @@ void ClientHandler::onPlayers(const QList<Player> &players) {
             else {
                 qWarning() << "Client" << id << QString("(<%1>) changed the position of <%2> from \"%3\" to \"%4\".").arg(m_player->name).arg(c->name).arg(c->position).arg(i.position % 40);
                 sendMessage(game, QString("<%1> changed the position of <%2> from \"%3\" to \"%4\".").arg(m_player->name).arg(c->name).arg(c->position).arg(i.position % 40));
-                c->position = i.position % 40;
+                movePlayerTo(c, i.position % 40);
                 changed = true;
             }
         }
@@ -439,7 +445,7 @@ void ClientHandler::onDice(const Dice &dice) {
         else if (dice.values.isEmpty() && !dice.moved && !m_player->dice.moved) {
             // throws
             if (m_player->dice.values.empty() || m_player->dice.values.last() == 6) {
-                auto value = rng.bounded(1, 7);
+                auto value = rng.bounded(1, 2);
                 qWarning() << "Client" << id << "threw" << value << "on his turn to dice";
                 m_player->dice.values.append(value);
                 sendMessage(game, QString("<%1> just threw %2").arg(m_player->name).arg(value));
@@ -456,8 +462,7 @@ void ClientHandler::onDice(const Dice &dice) {
             qWarning() << "Client" << id << "wants to move after throwing dice";
             m_player->dice.moved = true;
             for (auto i : m_player->dice.values) {
-                m_player->position += i;
-                m_player->position %= 40;
+                movePlayerTo(m_player, m_player->position + i);
                 updateOpponents(game);
             }
             return;
@@ -592,6 +597,43 @@ void ClientHandler::modifyPlayerMoney(PlayerData *player, int diff) {
     m_player->money += diff;
 }
 
+void ClientHandler::movePlayerTo(PlayerData *player, int position) {
+    // TODO
+    player->position = position % fields.count();
+    handleFieldEffect(player);
+}
+
+void ClientHandler::handleFieldEffect(PlayerData *player) {
+    auto game = gameByPlayer(player);
+    const auto &field = fields[player->position];
+    switch (field.type) {
+    case Field::BASIC:
+        for (auto effect : field.effects) {
+
+        }
+        break;
+    case Field::HORSE:
+        if (game->ownerOf(player->position)) {
+            auto owner = game->ownerOf(player->position);
+            qWarning() << field.name << "is owned by" << owner->name;
+            if (owner == player)
+                return;
+            auto currentUpgrade = game->upgradeLevelOf(player->position);
+            auto currentEffect = field.effects[currentUpgrade];
+
+            player->client->handleEffect(game, Effect { Effect::PLAYER, Effect::FEE, currentEffect.amount });
+            owner->client->handleEffect(game, Effect { Effect::PLAYER, Effect::GAIN, currentEffect.amount });
+        }
+        break;
+    case Field::TRAINER:
+        break;
+    case Field::TRANSPORT:
+        break;
+    case Field::DECK:
+        break;
+    }
+}
+
 void ClientHandler::handleEffect(Game *game, const Effect &effect) {
     if (!game)
         return;
@@ -653,10 +695,7 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
     }
     case Effect::MOVE_STEPS: {
         for (auto i : clients) {
-            i->position += effect.amount;
-            if (i->position < 0)
-                i->position += 40;
-            i->position %= 40;
+            movePlayerTo(i, i->position + effect.amount);
         }
         updateOpponents(game);
         break;
@@ -671,25 +710,31 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
     }
     case Effect::MOVE_TO_SUSPENSION: {
         // TODO
-        if (effect.amount != 0 && m_player->position < 10)
-            modifyPlayerMoney(m_player, 4000);
-        m_player->position = 10;
+        for (auto i : clients) {
+            if (effect.amount != 0 && i->position < 10)
+                modifyPlayerMoney(i, 4000);
+            movePlayerTo(i, 10);
+        }
         updateOpponents(game);
         break;
     }
     case Effect::MOVE_TO_LAST_FIELD: {
         // TODO
-        if (effect.amount != 0)
-            modifyPlayerMoney(m_player, 4000);
-        m_player->position = 39;
+        for (auto i : clients) {
+            if (effect.amount != 0)
+                modifyPlayerMoney(i, 4000);
+            movePlayerTo(i, 39);
+        }
         updateOpponents(game);
         break;
     }
     case Effect::MOVE_TO_PARKING_LOT: {
         // TODO
-        if (effect.amount != 0 && m_player->position < 20)
-            modifyPlayerMoney(m_player, 4000);
-        m_player->position = 20;
+        for (auto i : clients) {
+            if (effect.amount != 0 && i->position < 20)
+                modifyPlayerMoney(i, 4000);
+            movePlayerTo(i, 20);
+        }
         updateOpponents(game);
         break;
     }
