@@ -40,6 +40,7 @@ struct PlayerData : public Player {
         client->setPlayer(this);
     }
     ClientHandler *client { nullptr };
+    bool upgradedThisTurn { false };
 };
 
 struct Game : public Match {
@@ -392,6 +393,7 @@ void ClientHandler::onOwnerships(const QList<Ownership> &ownerships) {
                 break;
             }
             m_player->money -= card->price;
+            m_player->upgradedThisTurn = true;
             game->ownerships[card] = i.player;
             qWarning() << "Client" << id << QString("<%1> bought %2 for %3.").arg(m_player->name).arg(card->name).arg(card->price);
             sendMessage(game, QString("<%1> bought %2 for %3.").arg(m_player->name).arg(card->name).arg(card->price));
@@ -405,10 +407,30 @@ void ClientHandler::onOwnerships(const QList<Ownership> &ownerships) {
                 updateOwnerships(game);
             }
             else {
-                qCritical() << "AHOJ";
-                int difference = i.upgradeLevel - game->upgrades[card];
-                game->upgrades[card] += difference;
-                updateOwnerships(game);
+                auto color = card->color;
+                bool match = true;
+                for (auto &c : fields) {
+                    if (c.color == color) {
+                        if (game->ownerships[&c] != m_player->id) {
+                            match = false;
+                            break;
+                        }
+                    }
+                }
+                if (m_player->upgradedThisTurn && (game->upgrades[card] == 0 || game->upgrades[card] == 4)) {
+                    sendError("Kupovat další dostihy jde až když sem dojdeš znova.");
+                }
+                else if (m_player->position != card->id - 1) {
+                    sendError("Nemůžeš kupovat dostihy na karty na kterejch nestojíš");
+                }
+                else if (match) {
+                    int difference = i.upgradeLevel - game->upgrades[card];
+                    game->upgrades[card] += difference;
+                    updateOwnerships(game);
+                }
+                else {
+                    sendError("Nemůžeš kupovat dostihy, protože ještě nemáš všechny koně z týhle stáje.");
+                }
             }
         } else {
             sendPacket(Packet(Packet::ERROR, "Nemůžeš koupit nebo prodat cizí kusy"));
@@ -493,6 +515,7 @@ void ClientHandler::onDice(const Dice &dice) {
             // moves
             qWarning() << "Client" << id << "wants to move after throwing dice";
             m_player->dice.moved = true;
+            m_player->upgradedThisTurn = false;
             if (game->isSuspended(m_player) && !m_player->ownsCancelSuspension) {
                 if (m_player->dice.values.startsWith(6)) {
                     m_player->dice.values.removeFirst();
