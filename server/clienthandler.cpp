@@ -435,9 +435,18 @@ void ClientHandler::onDice(const Dice &dice) {
             }
         }
         if (dice.values.startsWith(-1)) {
+            // end turn
             qWarning() << "Client" << id << "wants to end their turn";
-            game->playerOnTurn++;
-            game->playerOnTurn %= game->clients.count();
+            while (true) {
+                game->playerOnTurn++;
+                game->playerOnTurn %= game->clients.count();
+                if (game->clients[game->playerOnTurn]->waiting <= 0) {
+                    break;
+                }
+                else {
+                    game->clients[game->playerOnTurn]->waiting--;
+                }
+            }
             for (auto i : game->clients) {
                 i->dice.values.clear();
                 i->dice.moved = false;
@@ -603,6 +612,9 @@ void ClientHandler::modifyPlayerMoney(PlayerData *player, int diff) {
 
 void ClientHandler::movePlayerTo(PlayerData *player, int position) {
     // TODO
+    if (position < 0)
+        position = 40 - position;
+    position %= 40;
     player->position = position % fields.count();
     handleFieldEffect(player);
 }
@@ -738,6 +750,80 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
             if (effect.amount != 0 && i->position < 20)
                 modifyPlayerMoney(i, 4000);
             movePlayerTo(i, 20);
+        }
+        updateOpponents(game);
+        break;
+    }
+    case Effect::MOVE_TO_FINANCE: {
+        for (auto i : clients) {
+            int position = i->position;
+            int startPosition = position; // to be safe
+            if (effect.amount != 0) {
+                while (fields[position].effects.count() == 0 || fields[position].effects.first().action != Effect::DRAW_FINANCE) {
+                    position += effect.amount;
+                    if (position >= 40)
+                        position = 0;
+                    if (position < 0)
+                        position = 39;
+                    if (position == startPosition) {
+                        qCritical() << "ERROR! Something is wrong about the field data, there are no finance cards";
+                        return;
+                    }
+                }
+                movePlayerTo(i, position);
+            }
+        }
+        updateOpponents(game);
+        break;
+    }
+    case Effect::MOVE_TO_TRAINER: {
+        for (auto i : clients) {
+            int position = i->position;
+            int startPosition = position; // to be safe
+            if (effect.amount != 0) {
+                while (fields[position].effects.count() == 0 || fields[position].type != Field::TRAINER) {
+                    position += effect.amount;
+                    if (position >= 40) {
+                        position = 0;
+                        modifyPlayerMoney(i, 4000);
+                    }
+                    if (position < 0) {
+                        position = 39;
+                        modifyPlayerMoney(i, 4000);
+                    }
+                    if (position == startPosition) {
+                        qCritical() << "ERROR! Something is wrong about the field data, there are no finance cards";
+                        return;
+                    }
+                }
+                movePlayerTo(i, position);
+            }
+        }
+        updateOpponents(game);
+        break;
+    }
+    case Effect::MOVE_TO_FIRST_FIELD: {
+        for (auto i : clients) {
+            movePlayerTo(i, 0);
+            if (effect.amount != 0)
+                modifyPlayerMoney(i, 4000);
+        }
+        updateOpponents(game);
+        break;
+    }
+    case Effect::FEE_PER_STEP: {
+        for (auto i : clients) {
+            int steps = 0;
+            for (auto s : i->dice.values)
+                steps += s;
+            modifyPlayerMoney(i, steps * effect.amount);
+        }
+        updateOpponents(game);
+        break;
+    }
+    case Effect::WAIT: {
+        for (auto i : clients) {
+            i->waiting += effect.amount;
         }
         updateOpponents(game);
         break;
