@@ -198,13 +198,14 @@ struct Player {
     bool onTurn { false };
     Dice dice;
     int waiting { 0 };
+    bool ownsCancelSuspension { false };
 };
 inline QDataStream &operator<<(QDataStream &str, const Player &item) {
-    str << item.id << item.name << item.color << item.money << item.leader << item.ready << item.you << item.position << item.onTurn << item.dice << item.waiting;
+    str << item.id << item.name << item.color << item.money << item.leader << item.ready << item.you << item.position << item.onTurn << item.dice << item.waiting << item.ownsCancelSuspension;
     return str;
 }
 inline QDataStream &operator>>(QDataStream &str, Player &item) {
-    str >> item.id >> item.name >> item.color >> item.money >> item.leader >> item.ready >> item.you >> item.position >> item.onTurn >> item.dice >> item.waiting;
+    str >> item.id >> item.name >> item.color >> item.money >> item.leader >> item.ready >> item.you >> item.position >> item.onTurn >> item.dice >> item.waiting >> item.ownsCancelSuspension;
     return str;
 }
 
@@ -279,6 +280,7 @@ struct Packet {
         OWNERSHIPS,
         CARD,
         DICE,
+        EFFECT,
         _LAST_TYPE
     } type { NONE };
     union {
@@ -295,6 +297,7 @@ struct Packet {
         QList<Ownership> ownerships;
         Card card;
         Dice dice;
+        Effect effect;
     };
     Packet() {}
     Packet(Type type, const QString &text) {
@@ -317,6 +320,7 @@ struct Packet {
     Packet(const QList<Ownership> &d) : type(OWNERSHIPS), ownerships(d) { }
     Packet(const Card &d) : type(CARD), card(d) { }
     Packet(const Dice &d) : type(DICE), dice(d) { }
+    Packet(const Effect &d) : type(EFFECT), effect(d) { }
     void setType(Type type) {
         clear();
         this->type = type;
@@ -362,6 +366,9 @@ struct Packet {
         case DICE:
             new (&dice) Dice();
             break;
+        case EFFECT:
+            new (&effect) Effect();
+            break;
         }
     }
     void clear() {
@@ -406,6 +413,9 @@ struct Packet {
             break;
         case DICE:
             dice.~Dice();
+            break;
+        case EFFECT:
+            effect.~Effect();
             break;
         }
         type = NONE;
@@ -459,6 +469,9 @@ inline QDataStream &operator<<(QDataStream &str, const Packet &item) {
         break;
     case Packet::DICE:
         str << item.dice;
+        break;
+    case Packet::EFFECT:
+        str << item.effect;
         break;
     default:
         str.setStatus(QDataStream::WriteFailed);
@@ -526,6 +539,10 @@ inline QDataStream &operator>>(QDataStream &str, Packet &item) {
     }
     case Packet::DICE: {
         str >> item.dice;
+        break;
+    }
+    case Packet::EFFECT: {
+        str >> item.effect;
         break;
     }
     default: {

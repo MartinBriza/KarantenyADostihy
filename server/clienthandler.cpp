@@ -82,6 +82,13 @@ struct Game : public Match {
     bool isSuspended(PlayerData *player) {
         return player && player->position == 10;
     }
+    PlayerData *suspensionCancelOwner() {
+        for (auto i : clients) {
+            if (i->ownsCancelSuspension)
+                return i;
+        }
+        return nullptr;
+    }
     int upgradeLevelOf(int field) {
         for (auto i : upgrades.keys()) {
             if (i->id == field) {
@@ -199,6 +206,7 @@ void ClientHandler::onReadyRead(const QByteArray &message) {
         case Packet::OWNERSHIPS: onOwnerships(p.ownerships); break;
         case Packet::CARD: onCard(p.card); break;
         case Packet::DICE: onDice(p.dice); break;
+        case Packet::EFFECT: onEffect(p.effect); break;
         }
     }
 }
@@ -465,11 +473,13 @@ void ClientHandler::onDice(const Dice &dice) {
                 qWarning() << "Client" << id << "threw" << value << "on his turn to dice";
                 m_player->dice.values.append(value);
                 sendMessage(game, QString("<%1> just threw %2").arg(m_player->name).arg(value));
-                if (!game->isSuspended(m_player) && m_player->dice.values == QList<int>{6, 6}) {
+                if ((!game->isSuspended(m_player) || m_player->ownsCancelSuspension) && m_player->dice.values == QList<int>{6, 6}) {
+                    if (game->isSuspended(m_player) && m_player->ownsCancelSuspension)
+                        m_player->ownsCancelSuspension = false;
                     handleEffect(game, Effect { Effect::PLAYER, Effect::MOVE_TO_SUSPENSION });
                     m_player->dice.moved = true;
                 }
-                if (game->isSuspended(m_player) && !m_player->dice.values.startsWith(6))
+                if (game->isSuspended(m_player) && !m_player->ownsCancelSuspension && !m_player->dice.values.startsWith(6))
                     m_player->dice.moved = true;
                 updateOpponents(game);
                 return;
@@ -479,7 +489,7 @@ void ClientHandler::onDice(const Dice &dice) {
             // moves
             qWarning() << "Client" << id << "wants to move after throwing dice";
             m_player->dice.moved = true;
-            if (game->isSuspended(m_player)) {
+            if (game->isSuspended(m_player) && !m_player->ownsCancelSuspension) {
                 if (m_player->dice.values.startsWith(6)) {
                     m_player->dice.values.removeFirst();
                     for (auto i : m_player->dice.values) {
@@ -489,6 +499,8 @@ void ClientHandler::onDice(const Dice &dice) {
                 }
             }
             else {
+                if (game->isSuspended(m_player) && m_player->ownsCancelSuspension)
+                    m_player->ownsCancelSuspension = false;
                 for (auto i : m_player->dice.values) {
                     movePlayerTo(m_player, m_player->position + i);
                     updateOpponents(game);
@@ -499,6 +511,9 @@ void ClientHandler::onDice(const Dice &dice) {
     }
     // gets here only when something is wrong
     sendError("Hele, nemám teď čas zjišťovat, cos udělal/a blbě, ale tohle je prostě NELEGÁLNÍ");
+}
+
+void ClientHandler::onEffect(const Effect &effect) {
 }
 
 void ClientHandler::onBullshit() {
@@ -584,7 +599,7 @@ void ClientHandler::handleEmptyGame(Game *game) {
 void ClientHandler::updateOwnerships(Game *game) {
     QList<Ownership> data;
     for (auto i : game->ownerships.keys()) {
-        data.append({game->ownerships[i], i->id});
+        data.append({game->ownerships[i], i->id, game->upgrades[i]});
     }
     for (auto i : game->clients) {
         i->client->sendPacket(Packet(data));
@@ -614,6 +629,7 @@ void ClientHandler::updateOpponents(Game *game) {
             o.leader = first;
             o.onTurn = (order == game->playerOnTurn);
             o.dice = i->dice;
+            o.ownsCancelSuspension = i->ownsCancelSuspension;
             first = false;
             opponents.append(o);
             order++;
@@ -692,7 +708,9 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
     case Effect::NO_ACTION:
         break;
     case Effect::DRAW_CHANCE: {
-        auto &c = chanceCards[qrand() % chanceCards.count()];
+        Card &c = chanceCards[qrand() % chanceCards.count()];
+        while (game->suspensionCancelOwner() && c.effect.action == Effect::CANCEL_SUSPENSION)
+            c = chanceCards[qrand() % chanceCards.count()];
         sendMessage(game, Chat{QString("Hráč %1 vytáhl kartu Náhoda - \"%2\"").arg(m_player->name).arg(c.name)});
         handleEffect(game, c.effect);
         sendPacket(Packet(c));
@@ -840,6 +858,17 @@ void ClientHandler::handleEffect(Game *game, const Effect &effect) {
     case Effect::WAIT: {
         for (auto i : clients) {
             i->waiting += effect.amount;
+        }
+        updateOpponents(game);
+        break;
+    }
+    case Effect::CANCEL_SUSPENSION: {
+        for (auto i : clients) {
+            auto o = game->suspensionCancelOwner();
+            if (o)
+                return;
+            else
+                i->ownsCancelSuspension = true;
         }
         updateOpponents(game);
         break;

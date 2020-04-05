@@ -38,6 +38,7 @@ private:
     void onOwnerships(const QList<Ownership> &ownerships);
     void onCard(const Card &card);
     void onDice(const Dice &dice);
+    void onEffect(const Effect &effect);
 
     void onBullshit();
 

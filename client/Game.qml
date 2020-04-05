@@ -83,13 +83,6 @@ Item {
                     Rectangle {
                         id: opponentDelegate
                         property variant player: modelData
-                        Connections {
-                            target: player
-                            onDiceChanged: {
-                                console.warn("AHOJ")
-                                console.warn(player.dice)
-                            }
-                        }
                         width: opponentLayout.width + 6
                         height: opponentLayout.height + 6
                         border {
@@ -123,6 +116,13 @@ Item {
                                 }
                                 Item {
                                     Layout.fillWidth: true
+                                }
+
+                                Button {
+                                    visible: player.ownsCancelSuspension
+                                    enabled: false
+                                    implicitWidth: height
+                                    text: "🔓"
                                 }
 
                                 Button {

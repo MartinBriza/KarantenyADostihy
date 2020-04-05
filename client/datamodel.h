@@ -263,6 +263,7 @@ class Player : public QObject, public ::Player {
     Q_PROPERTY(bool onTurn READ onTurnGet NOTIFY onTurnChanged)
     Q_PROPERTY(QList<int> dice READ diceGet NOTIFY diceChanged)
     Q_PROPERTY(bool diceMoved READ diceMovedGet NOTIFY diceChanged)
+    Q_PROPERTY(bool ownsCancelSuspension READ ownsCancelSuspensionGet NOTIFY ownsCancelSuspensionChanged)
 public:
     Player(Client *parent, const ::Player &data);
 
@@ -302,10 +303,13 @@ public:
             emit onTurnChanged();
         }
         if (dice.values != data.dice.values || dice.moved != data.dice.moved) {
-            qCritical() << data.dice.values;
             dice.values = data.dice.values;
             dice.moved = data.dice.moved;
             emit diceChanged();
+        }
+        if (ownsCancelSuspension != data.ownsCancelSuspension) {
+            ownsCancelSuspension = data.ownsCancelSuspension;
+            emit ownsCancelSuspensionChanged();
         }
     }
     int idGet() const {
@@ -347,6 +351,9 @@ public:
     bool diceMovedGet() const {
         return dice.moved;
     }
+    bool ownsCancelSuspensionGet() const {
+        return ownsCancelSuspension;
+    }
 public slots:
     void updateOwnerships(const QList<::Ownership> &list) {
         for (auto i : m_owns) {
@@ -372,6 +379,7 @@ signals:
     void youChanged();
     void onTurnChanged();
     void diceChanged();
+    void ownsCancelSuspensionChanged();
 private:
     QList<Ownership*> m_owns { };
 };
