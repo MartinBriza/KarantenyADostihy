@@ -1,8 +1,9 @@
 #include "clienthandler.h"
 
-#include <QRandomGenerator>
+#include <random>
 
-static QRandomGenerator rng;
+std::random_device rd;
+std::mt19937 rng(rd());
 
 inline int lastGameID { 1 };
 inline int lastCardID { 1 };
@@ -447,7 +448,8 @@ void ClientHandler::onDice(const Dice &dice) {
         else if (dice.values.isEmpty() && !dice.moved && !m_player->dice.moved) {
             // throws
             if (m_player->dice.values.empty() || m_player->dice.values.last() == 6) {
-                auto value = rng.bounded(1, 2);
+                std::uniform_int_distribution<> distribution(1, 6);
+                auto value = distribution(rng);
                 qWarning() << "Client" << id << "threw" << value << "on his turn to dice";
                 m_player->dice.values.append(value);
                 sendMessage(game, QString("<%1> just threw %2").arg(m_player->name).arg(value));
