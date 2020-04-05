@@ -79,6 +79,9 @@ struct Game : public Match {
         }
         return nullptr;
     }
+    bool isSuspended(PlayerData *player) {
+        return player && player->position == 10;
+    }
     int upgradeLevelOf(int field) {
         for (auto i : upgrades.keys()) {
             if (i->id == field) {
@@ -462,10 +465,12 @@ void ClientHandler::onDice(const Dice &dice) {
                 qWarning() << "Client" << id << "threw" << value << "on his turn to dice";
                 m_player->dice.values.append(value);
                 sendMessage(game, QString("<%1> just threw %2").arg(m_player->name).arg(value));
-                if (m_player->dice.values == QList<int>{6, 6}) {
+                if (!game->isSuspended(m_player) && m_player->dice.values == QList<int>{6, 6}) {
                     handleEffect(game, Effect { Effect::PLAYER, Effect::MOVE_TO_SUSPENSION });
                     m_player->dice.moved = true;
                 }
+                if (game->isSuspended(m_player) && !m_player->dice.values.startsWith(6))
+                    m_player->dice.moved = true;
                 updateOpponents(game);
                 return;
             }
@@ -474,9 +479,20 @@ void ClientHandler::onDice(const Dice &dice) {
             // moves
             qWarning() << "Client" << id << "wants to move after throwing dice";
             m_player->dice.moved = true;
-            for (auto i : m_player->dice.values) {
-                movePlayerTo(m_player, m_player->position + i);
-                updateOpponents(game);
+            if (game->isSuspended(m_player)) {
+                if (m_player->dice.values.startsWith(6)) {
+                    m_player->dice.values.removeFirst();
+                    for (auto i : m_player->dice.values) {
+                        movePlayerTo(m_player, m_player->position + i);
+                        updateOpponents(game);
+                    }
+                }
+            }
+            else {
+                for (auto i : m_player->dice.values) {
+                    movePlayerTo(m_player, m_player->position + i);
+                    updateOpponents(game);
+                }
             }
             return;
         }
