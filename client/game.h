@@ -259,6 +259,7 @@ private slots:
                                 field->ownerSet(player);
                             }
                         }
+                        field->upgradeLevelSet(ownership.upgradeLevel);
                     }
                 }
             }

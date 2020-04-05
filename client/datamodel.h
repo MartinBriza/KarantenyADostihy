@@ -52,6 +52,7 @@ class Field : public QObject, public ::Field {
     Q_PROPERTY(int upgradePrice READ upgradePriceGet CONSTANT)
     Q_PROPERTY(Type type READ typeGet CONSTANT)
     Q_PROPERTY(Player* owner READ ownerGet NOTIFY ownerChanged)
+    Q_PROPERTY(int upgradeLevel READ upgradeLevelGet WRITE upgradeLevelSet NOTIFY upgradeLevelChanged)
     //Q_PROPERTY(int fee READ feeGet NOTIFY feeChanged)
     Q_PROPERTY(QQmlListProperty<UI::Effect> effects READ effectsGet CONSTANT)
 public:
@@ -75,15 +76,25 @@ public:
     Type typeGet() const;
     UI::Player *ownerGet();
     void ownerSet(UI::Player *owner);
+    int upgradeLevelGet() const {
+        return m_upgradeLevel;
+    }
+    void upgradeLevelSet(int level) {
+        if (m_upgradeLevel != level) {
+            m_upgradeLevel = level;
+            emit upgradeLevelChanged();
+        }
+    }
     QQmlListProperty<UI::Effect> effectsGet() {
         return QQmlListProperty<UI::Effect>(this, m_effects);
     }
 signals:
     void feeChanged();
     void ownerChanged();
+    void upgradeLevelChanged();
 private:
     QList<Effect*> m_effects;
-    int m_upgrade;
+    int m_upgradeLevel;
     QPointer<Player> m_owner { nullptr };
 };
 

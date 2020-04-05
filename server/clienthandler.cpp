@@ -397,7 +397,7 @@ void ClientHandler::onOwnerships(const QList<Ownership> &ownerships) {
             sendMessage(game, QString("<%1> bought %2 for %3.").arg(m_player->name).arg(card->name).arg(card->price));
             updateOwnerships(game);
             updateOpponents(game);
-        } else if (game->ownerships[card] == m_player->id && m_player->id != i.player) {
+        } else if (game->ownerships[card] == m_player->id) {
             if (m_player->id != i.player) {
                 game->ownerships[card] = i.player;
                 qWarning() << "Client" << id << QString("<%1> gave %2 to <%3>.").arg(m_player->name).arg(card->name).arg(client->name);
@@ -405,6 +405,10 @@ void ClientHandler::onOwnerships(const QList<Ownership> &ownerships) {
                 updateOwnerships(game);
             }
             else {
+                qCritical() << "AHOJ";
+                int difference = i.upgradeLevel - game->upgrades[card];
+                game->upgrades[card] += difference;
+                updateOwnerships(game);
             }
         } else {
             sendPacket(Packet(Packet::ERROR, "Nemůžeš koupit nebo prodat cizí kusy"));

@@ -43,7 +43,7 @@ void Client::refreshRoster() {
 
 void Client::setReady(bool val) {
     if (m_thisPlayerId > 0) {
-        sendPacket(Packet(QList<::Player>{{m_thisPlayerId, {}, {}, -1, -1, {}, val, {}}}));
+        sendPacket(Packet(QList<::Player>{{m_thisPlayerId, {}, {}, -1, -1, {}, val, {}, {}, {}}}));
     }
 }
 
@@ -52,15 +52,19 @@ void Client::startGame() {
 }
 
 void Client::move(int id, int position) {
-    sendPacket(Packet(QList<::Player>{{id, {}, {}, -1, position, {}, {}, {}}}));
+    sendPacket(Packet(QList<::Player>{{id, {}, {}, -1, position, {}, {}, {}, {}, {}, {}}}));
 }
 
 void Client::buy(int id) {
-    sendPacket(Packet(QList<Ownership>{Ownership{m_thisPlayerId, id}}));
+    sendPacket(Packet(QList<Ownership>{Ownership{m_thisPlayerId, id, -1}}));
 }
 
 void Client::upgrade(int id) {
-
+    for (auto i : m_board->fieldList()) {
+        if (i->idGet() == id) {
+            sendPacket(Packet(QList<Ownership>{{m_thisPlayerId, id, i->upgradeLevelGet() + 1}}));
+        }
+    }
 }
 
 void Client::drawCard(int type) {
@@ -81,7 +85,7 @@ void Client::giveMoney(int amount) {
         if (i->you)
             currentMoney = i->money;
     }
-    sendPacket(Packet(QList<::Player>{{m_thisPlayerId, {}, {}, currentMoney - amount, -1, {}, {}, {}}}));
+    sendPacket(Packet(QList<::Player>{{m_thisPlayerId, {}, {}, currentMoney - amount, -1, {}, {}, {}, {}, {}}}));
 }
 
 void Client::takeMoney(int amount) {
@@ -90,7 +94,7 @@ void Client::takeMoney(int amount) {
         if (i->you)
             currentMoney = i->money;
     }
-    sendPacket(Packet(QList<::Player>{{m_thisPlayerId, {}, {}, currentMoney + amount, -1, {}, {}, {}}}));
+    sendPacket(Packet(QList<::Player>{{m_thisPlayerId, {}, {}, currentMoney + amount, -1, {}, {}, {}, {}, {}}}));
 }
 
 void Client::dice() {
