@@ -521,19 +521,24 @@ void ClientHandler::onDice(const Dice &dice) {
             if (game->isSuspended(m_player) && !m_player->ownsCancelSuspension) {
                 if (m_player->dice.values.startsWith(6)) {
                     m_player->dice.values.removeFirst();
+                    int totalMove = 0;
                     for (auto i : m_player->dice.values) {
-                        movePlayerTo(m_player, m_player->position + i);
-                        updateOpponents(game);
+                        totalMove += i;
                     }
+                    movePlayerTo(m_player, m_player->position + totalMove);
+                    updateOpponents(game);
                 }
             }
             else {
-                if (game->isSuspended(m_player) && m_player->ownsCancelSuspension)
+                if (game->isSuspended(m_player) && m_player->ownsCancelSuspension) {
                     m_player->ownsCancelSuspension = false;
-                for (auto i : m_player->dice.values) {
-                    movePlayerTo(m_player, m_player->position + i);
-                    updateOpponents(game);
                 }
+                int totalMove = 0;
+                for (auto i : m_player->dice.values) {
+                    totalMove += i;
+                }
+                movePlayerTo(m_player, m_player->position + totalMove);
+                updateOpponents(game);
             }
             return;
         }
@@ -702,10 +707,41 @@ void ClientHandler::handleFieldEffect(PlayerData *player) {
             owner->client->handleEffect(game, Effect { Effect::PLAYER, Effect::GAIN, currentEffect.amount });
         }
         break;
-    case Field::TRAINER:
+    case Field::TRAINER: {
+        auto owner = game->ownerOf(player->position);
+        if (!owner)
+            return;
+        int count = 0;
+        for (auto &i : fields) {
+            if (i.type == Field::TRAINER && game->ownerships[&i] == owner->id)
+                count++;
+        }
+        player->client->handleEffect(game, Effect { Effect::PLAYER, Effect::FEE, field.effects.first().amount * count });
+        owner->client->handleEffect(game, Effect { Effect::PLAYER, Effect::GAIN, field.effects.first().amount * count });
         break;
-    case Field::TRANSPORT:
+    }
+    case Field::TRANSPORT: {
+        auto owner = game->ownerOf(player->position);
+        if (!owner)
+            return;
+        int count = 0;
+        for (auto &i : fields) {
+            if (i.type == Field::TRANSPORT && game->ownerships[&i] == owner->id)
+                count++;
+        }
+        int steps = 0;
+        for (auto i : player->dice.values)
+            steps += i;
+        if (count == 1) {
+            player->client->handleEffect(game, Effect { Effect::PLAYER, Effect::FEE, field.effects.first().amount * steps });
+            owner->client->handleEffect(game, Effect { Effect::PLAYER, Effect::GAIN, field.effects.first().amount * steps });
+        }
+        else if (count == 2) {
+            player->client->handleEffect(game, Effect { Effect::PLAYER, Effect::FEE, field.effects.first().secondaryAmount * steps });
+            owner->client->handleEffect(game, Effect { Effect::PLAYER, Effect::GAIN, field.effects.first().secondaryAmount * steps });
+        }
         break;
+    }
     case Field::DECK:
         for (auto effect : field.effects) {
             player->client->handleEffect(game, effect);
