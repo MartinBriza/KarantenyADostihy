@@ -66,6 +66,7 @@ Dialog {
                 Layout.alignment: Qt.AlignHCenter
                 visible: model && model.type === FieldData.HORSE
                 text: "Obsadit dostih"
+                onClicked: client.upgrade(model.id)
             }
             Button {
                 Layout.alignment: Qt.AlignHCenter

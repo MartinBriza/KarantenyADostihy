@@ -59,6 +59,10 @@ void Client::buy(int id) {
     sendPacket(Packet(QList<Ownership>{Ownership{m_thisPlayerId, id}}));
 }
 
+void Client::upgrade(int id) {
+
+}
+
 void Client::drawCard(int type) {
     if (type == Effect::DRAW_CHANCE) {
         sendPacket(Packet(Card{{}, "chance", {}}));

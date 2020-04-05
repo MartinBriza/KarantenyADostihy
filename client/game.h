@@ -139,6 +139,7 @@ public slots:
     void startGame();
     void move(int id, int position);
     void buy(int id);
+    void upgrade(int id);
     void drawCard(int type);
     void giveMoney(int amount);
     void takeMoney(int amount);
