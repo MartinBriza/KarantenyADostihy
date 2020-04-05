@@ -441,7 +441,9 @@ void ClientHandler::onOwnerships(const QList<Ownership> &ownerships) {
 
 void ClientHandler::onCard(const Card &card) {
     auto game = clientGame();
-    if (card.name == "chance") {
+    if (game->strict) {
+        return;
+    } else if (card.name == "chance") {
         handleEffect(game, Effect {Effect::PLAYER, Effect::DRAW_CHANCE});
     }
     else if (card.name == "finance") {
@@ -684,7 +686,7 @@ void ClientHandler::handleFieldEffect(PlayerData *player) {
     switch (field.type) {
     case Field::BASIC:
         for (auto effect : field.effects) {
-
+            player->client->handleEffect(game, effect);
         }
         break;
     case Field::HORSE:
@@ -705,6 +707,9 @@ void ClientHandler::handleFieldEffect(PlayerData *player) {
     case Field::TRANSPORT:
         break;
     case Field::DECK:
+        for (auto effect : field.effects) {
+            player->client->handleEffect(game, effect);
+        }
         break;
     }
 }

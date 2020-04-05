@@ -70,7 +70,7 @@ Dialog {
             }
             Button {
                 Layout.alignment: Qt.AlignHCenter
-                visible: model && model.type === FieldData.DECK
+                visible: !client.strictGame && model && model.type === FieldData.DECK
                 text: "Táhnout"
                 onClicked: {
                     // ugh
